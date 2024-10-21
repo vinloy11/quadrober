@@ -8,6 +8,9 @@ public class QuadroberApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(QuadroberApplication.class, args);
+
+
+
 	}
 
 }
