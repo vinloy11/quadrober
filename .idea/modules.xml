@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/cvadro-app.iml" filepath="$PROJECT_DIR$/cvadro-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/quadrober-app.iml" filepath="$PROJECT_DIR$/quadrober-app.iml" />
     </modules>
   </component>
 </project>
