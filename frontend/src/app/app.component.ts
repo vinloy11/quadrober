@@ -1,35 +1,23 @@
-import { Component, Inject, Optional } from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { YMapLocationRequest } from 'ymaps3';
-import { DOCUMENT } from '@angular/common';
+import { NgIf } from '@angular/common';
+import { MapService } from './services/map.service';
+import { AddPointButtonComponent } from './map-controls/add-point-button/add-point-button.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NgIf, AddPointButtonComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'frontend';
 
   constructor(
-    @Inject(DOCUMENT) private document: Document
-  ) {
-    this.initMap();
-  }
+    public readonly mapService: MapService
+  ) { }
 
-  async initMap() {
-    await ymaps3.ready;
-
-    const LOCATION: YMapLocationRequest = {
-      center: [37.623082, 55.75254],
-      zoom: 9
-    };
-
-    const { YMap, YMapDefaultSchemeLayer } = ymaps3;
-
-    const map = new YMap(this.document.getElementById('map') as HTMLElement, { location: LOCATION });
-    map.addChild(new YMapDefaultSchemeLayer({}));
+  ngOnInit() {
   }
 }
