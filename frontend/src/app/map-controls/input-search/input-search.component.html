@@ -1,0 +1,19 @@
+<ng-container [formGroup]="form" *ngIf="form">
+  <input
+    type="text"
+    placeholder="Место встречи"
+    class="form-control"
+    formControlName="address"
+    [ngbTypeahead]="search"
+    [resultTemplate]="rt"
+    popupClass="input-address-popup-container"
+    [inputFormatter]="formatter"/>
+
+  <ng-template #rt let-r="result" let-t="term">
+    <span style="white-space: pre-line;">{{ r.GeoObject?.description }} {{ r.GeoObject?.name }}</span>
+  </ng-template>
+
+  <div class="button-container">
+    <button type="button" class="btn btn-link" (click)="goNext()">Продолжить</button>
+  </div>
+</ng-container>

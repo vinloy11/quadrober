@@ -1,0 +1,5 @@
+<ng-container [formGroup]="form" *ngIf="form">
+  <div id="map" style="width: 100vw; height: 100vh"></div>
+  <app-add-point-button *ngIf="mapService.mapState() === MapState.INITIAL"></app-add-point-button>
+  <app-input-search *ngIf="mapService.mapState() === MapState.FILLING_FORM"></app-input-search>
+</ng-container>

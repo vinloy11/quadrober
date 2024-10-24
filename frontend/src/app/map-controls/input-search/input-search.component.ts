@@ -1,42 +1,27 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Component, forwardRef, OnDestroy, OnInit, Optional } from '@angular/core';
 import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
-import { MapService } from '../../services/map.service';
-import {
-  debounceTime,
-  filter,
-  map, mergeMap,
-  Observable,
-  of,
-  OperatorFunction,
-  Subject,
-  takeUntil
-} from 'rxjs';
-import { LngLat } from 'ymaps3';
+import { FormControl, FormGroupDirective, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { FeatureMember } from '../../models/geocoder-response';
-import { JsonPipe, NgIf } from '@angular/common';
-
-enum STEPS {
-  STEP_1,
-  STEP_2,
-}
+import { debounceTime, filter, map, mergeMap, Observable, of, OperatorFunction, Subject, takeUntil } from 'rxjs';
+import { MapService } from '../../services/map.service';
+import { LngLat } from 'ymaps3';
+import { PointForm } from '../map/map.component';
+import { NgIf } from '@angular/common';
+import { Nullable } from '../../models/nullable';
 
 @Component({
-  selector: 'app-point-form',
+  selector: 'app-input-search',
   standalone: true,
   imports: [
-    ReactiveFormsModule,
     NgbTypeahead,
-    JsonPipe,
+    ReactiveFormsModule,
     NgIf
   ],
-  templateUrl: './point-form.component.html',
-  styleUrl: './point-form.component.scss'
+  templateUrl: './input-search.component.html',
+  styleUrl: './input-search.component.scss',
 })
-export class PointFormComponent implements OnDestroy, OnInit {
-  protected STEPS = STEPS;
-  protected currentStep = signal(STEPS.STEP_1);
-  address = new FormControl<FeatureMember | null>(null);
+export class InputSearchComponent implements OnDestroy, OnInit {
+  form: Nullable<PointForm> = null;
   private readonly unsubscribe$ = new Subject<null>();
   search: OperatorFunction<string, readonly FeatureMember[]> = (text$: Observable<string>) =>
     text$.pipe(
@@ -56,7 +41,7 @@ export class PointFormComponent implements OnDestroy, OnInit {
 
   formatter = (x: FeatureMember) => {
     if (x) {
-      return `${x.GeoObject?.description} ${x.GeoObject?.name}`
+      return `${x.GeoObject?.name}`
     } else {
       return ''
     }
@@ -64,22 +49,25 @@ export class PointFormComponent implements OnDestroy, OnInit {
 
   constructor(
     private readonly mapService: MapService,
+    @Optional() private readonly formGroupDirective: FormGroupDirective
   ) {
   }
 
   ngOnInit() {
+    this.form = this.formGroupDirective.control;
+
     this.mapService.preparedCoordinates$
       .pipe(
         takeUntil(this.unsubscribe$),
       )
       .subscribe(response => {
-        this.address.patchValue(
+        this.form?.controls.address.patchValue(
           response.response?.GeoObjectCollection?.featureMember?.[0],
           { emitEvent: false }
         );
       });
 
-    this.address.valueChanges.pipe(
+    this.form.controls.address.valueChanges.pipe(
       debounceTime(300),
       filter(address => !!address?.GeoObject),
       takeUntil(this.unsubscribe$),
@@ -95,15 +83,7 @@ export class PointFormComponent implements OnDestroy, OnInit {
     this.unsubscribe$.complete();
   }
 
-  chooseOnMap() {
-    this.mapService.chooseOnMap();
-  }
-
-  goToStep2() {
-    this.currentStep.set(STEPS.STEP_2);
-  }
-
-  goStep(step: STEPS) {
-    this.currentStep.set(step);
+  goNext() {
+    console.log('continue')
   }
 }

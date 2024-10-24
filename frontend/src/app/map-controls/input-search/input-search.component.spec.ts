@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PointFormComponent } from './point-form.component';
+import { InputSearchComponent } from './input-search.component';
 
-describe('PointFormComponent', () => {
-  let component: PointFormComponent;
-  let fixture: ComponentFixture<PointFormComponent>;
+describe('InputSearchComponent', () => {
+  let component: InputSearchComponent;
+  let fixture: ComponentFixture<InputSearchComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PointFormComponent]
+      imports: [InputSearchComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(PointFormComponent);
+    fixture = TestBed.createComponent(InputSearchComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

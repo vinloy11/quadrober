@@ -1,0 +1,22 @@
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  padding: 32px;
+}
+
+::ng-deep {
+  .input-address-popup-container {
+    width: calc(100vw - 64px);
+    max-height: 40vh;
+    overflow: auto;
+    margin-top: 8px !important;
+  }
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+}

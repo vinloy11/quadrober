@@ -1,14 +1,20 @@
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, signal } from '@angular/core';
 import { LngLat, YMap, YMapLocationRequest, YMapMarker } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { debounceTime, Observable, Subject, switchMap } from 'rxjs';
 import { GeocoderResponse } from '../models/geocoder-response';
 
+export enum MapState {
+  INITIAL,
+  FILLING_FORM,
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
+  mapState = signal(MapState.INITIAL);
   addPointContainer: HTMLElement | null = null;
   yandexPath = 'https://geocode-maps.yandex.ru/1.x/';
   apiKey = '3aa9f3c7-cef8-4674-8143-9764dfe005ea';
@@ -149,5 +155,9 @@ export class MapService {
         }
       }, 300);
     }
+  }
+
+  setMapState(state: MapState) {
+    this.mapState.set(state);
   }
 }
