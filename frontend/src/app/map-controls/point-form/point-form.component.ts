@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal, WritableSignal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
 import { MapService } from '../../services/map.service';
@@ -16,6 +16,11 @@ import { LngLat } from 'ymaps3';
 import { FeatureMember } from '../../models/geocoder-response';
 import { JsonPipe, NgIf } from '@angular/common';
 
+enum STEPS {
+  STEP_1,
+  STEP_2,
+}
+
 @Component({
   selector: 'app-point-form',
   standalone: true,
@@ -29,6 +34,8 @@ import { JsonPipe, NgIf } from '@angular/common';
   styleUrl: './point-form.component.scss'
 })
 export class PointFormComponent implements OnDestroy, OnInit {
+  protected STEPS = STEPS;
+  protected currentStep = signal(STEPS.STEP_1);
   address = new FormControl<FeatureMember | null>(null);
   private readonly unsubscribe$ = new Subject<null>();
   search: OperatorFunction<string, readonly FeatureMember[]> = (text$: Observable<string>) =>
@@ -92,7 +99,11 @@ export class PointFormComponent implements OnDestroy, OnInit {
     this.mapService.chooseOnMap();
   }
 
-  nextStep() {
-    console.log('continue form')
+  goToStep2() {
+    this.currentStep.set(STEPS.STEP_2);
+  }
+
+  goStep(step: STEPS) {
+    this.currentStep.set(step);
   }
 }

@@ -1,18 +1,29 @@
 <div class="point-form">
-  <input
-    type="text"
-    placeholder="Место встречи"
-    class="form-control"
-    [formControl]="address"
-    [ngbTypeahead]="search"
-    [resultTemplate]="rt"
-    popupClass="input-address-popup-container"
-    [inputFormatter]="formatter"/>
-  <button type="button" class="btn btn-link" (click)="chooseOnMap()">Показать на карте</button>
+  @switch (currentStep()) {
+    @case (STEPS.STEP_1) {
+      <input
+        type="text"
+        placeholder="Место встречи"
+        class="form-control"
+        [formControl]="address"
+        [ngbTypeahead]="search"
+        [resultTemplate]="rt"
+        popupClass="input-address-popup-container"
+        [inputFormatter]="formatter"/>
+      <button type="button" class="btn btn-link" (click)="chooseOnMap()">Показать на карте</button>
 
-  <div class="continue-button" *ngIf="address.value?.GeoObject">
-    <button type="button" class="btn btn-primary" (click)="nextStep()">Продолжить</button>
-  </div>
+      <div class="actions" *ngIf="address.value?.GeoObject">
+        <button type="button" class="btn btn-primary" (click)="goStep(STEPS.STEP_2)">Продолжить</button>
+      </div>
+    }
+    @case (STEPS.STEP_2) {
+      <div class="actions step-2">
+        <button type="button" class="btn btn-primary" (click)="goStep(STEPS.STEP_1)">Назад</button>
+
+        <button type="button" class="btn btn-primary" (click)="goStep(STEPS.STEP_1)">Продолжить</button>
+      </div>
+    }
+  }
 </div>
 
 <ng-template #rt let-r="result" let-t="term">

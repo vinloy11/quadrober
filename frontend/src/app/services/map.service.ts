@@ -32,8 +32,6 @@ export class MapService {
     @Inject(DOCUMENT) private document: Document
   ) {
     this.initMap();
-    this.requestLocation();
-
   }
 
   async initMap() {
@@ -50,6 +48,8 @@ export class MapService {
     this.map = new YMap(this.document.getElementById('map') as HTMLElement, { location: defaultLocation });
 
     this.map.addChild(new YMapDefaultSchemeLayer({})).addChild(new YMapDefaultFeaturesLayer({}));
+
+    this.requestLocation();
   }
 
   requestLocation() {
@@ -65,16 +65,20 @@ export class MapService {
   }
 
   async setMarkerWithMe(coordinates: number[]) {
-    // @ts-ignore
-    const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
+    try {
+      // @ts-ignore
+      const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
 
-    const mePoint = new YMapDefaultMarker({
-      coordinates: coordinates as LngLat,
-      draggable: false,
-      title: 'Вы сейчас здесь',
-    }) as any;
+      const mePoint = new YMapDefaultMarker({
+        coordinates: coordinates as LngLat,
+        draggable: false,
+        title: 'Вы сейчас здесь',
+      }) as any;
 
-    this.map?.addChild(mePoint)
+      this.map?.addChild(mePoint)
+    } catch (e) {
+
+    }
   }
 
   setLocation(location: YMapLocationRequest) {
@@ -85,23 +89,27 @@ export class MapService {
    * Создать ползунок для выбора места встречи
    */
   async addPoint(coordinates?: LngLat) {
-    // @ts-ignore
-    const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
+    try {
+      // @ts-ignore
+      const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
 
-    if (this.meetingPoint) {
-      this.map?.removeChild(this.meetingPoint);
+      if (this.meetingPoint) {
+        this.map?.removeChild(this.meetingPoint);
+      }
+
+      this.meetingPoint = new YMapDefaultMarker({
+        coordinates: coordinates || this.map?.center as LngLat,
+        draggable: true,
+        title: 'Место встречи',
+        subtitle: 'Передвигайте ползунок',
+        // onDragMove: this.onDragMovePointAHandler,
+        onDragEnd: this.onDragEndHandler.bind(this),
+      }) as any;
+
+      this.map?.addChild(this.meetingPoint)
+    } catch (e) {
+
     }
-
-    this.meetingPoint = new YMapDefaultMarker({
-      coordinates: coordinates || this.map?.center as LngLat,
-      draggable: true,
-      title: 'Место встречи',
-      subtitle: 'Передвигайте ползунок',
-      // onDragMove: this.onDragMovePointAHandler,
-      onDragEnd: this.onDragEndHandler.bind(this),
-    }) as any;
-
-    this.map?.addChild(this.meetingPoint)
   }
 
   addPointFromInput(coordinates: LngLat) {
