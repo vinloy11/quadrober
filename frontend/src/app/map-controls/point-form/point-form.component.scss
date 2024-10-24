@@ -1,0 +1,22 @@
+.point-form {
+  padding: 24px;
+}
+
+.continue-button {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+::ng-deep {
+  .add-point-container.offcanvas.offcanvas-bottom {
+    height: 100vh;
+  }
+
+  .input-address-popup-container {
+    width: calc(100vw - 48px);
+    max-height: 40vh;
+    overflow: auto;
+    margin-top: 8px !important;
+  }
+}

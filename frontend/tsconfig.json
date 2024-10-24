@@ -24,11 +24,14 @@
       "dom"
     ],
     "typeRoots": [
-      "./node_modules/@yandex/ymaps3-types"
+      "./node_modules/@yandex/ymaps3-types",
+      "./node_modules/@yandex/ymaps3-default-ui-theme",
+
     ],
     "paths": {
       "ymaps3": [
-        "./node_modules/@yandex/ymaps3-types"
+        "./node_modules/@yandex/ymaps3-types",
+        "./node_modules/@yandex/ymaps3-default-ui-theme"
       ]
     }
   },

@@ -1,0 +1,20 @@
+<div class="point-form">
+  <input
+    type="text"
+    placeholder="Место встречи"
+    class="form-control"
+    [formControl]="address"
+    [ngbTypeahead]="search"
+    [resultTemplate]="rt"
+    popupClass="input-address-popup-container"
+    [inputFormatter]="formatter"/>
+  <button type="button" class="btn btn-link" (click)="chooseOnMap()">Показать на карте</button>
+
+  <div class="continue-button" *ngIf="address.value?.GeoObject">
+    <button type="button" class="btn btn-primary" (click)="nextStep()">Продолжить</button>
+  </div>
+</div>
+
+<ng-template #rt let-r="result" let-t="term">
+  <span style="white-space: pre-line;">{{ r.GeoObject?.description }} {{ r.GeoObject?.name }}</span>
+</ng-template>

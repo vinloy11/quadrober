@@ -1,22 +1,47 @@
 import { Inject, Injectable } from '@angular/core';
-import { YMap, YMapFeatureDataSource, YMapLayer, YMapLocationRequest, YMapMarker } from 'ymaps3';
+import { LngLat, YMap, YMapLocationRequest, YMapMarker } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { debounceTime, Observable, Subject, switchMap } from 'rxjs';
+import { GeocoderResponse } from '../models/geocoder-response';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
+  addPointContainer: HTMLElement | null = null;
+  yandexPath = 'https://geocode-maps.yandex.ru/1.x/';
+  apiKey = '3aa9f3c7-cef8-4674-8143-9764dfe005ea';
+  pointCoordinates$ = new Subject<LngLat>();
+  preparedCoordinates$ = this.pointCoordinates$.asObservable().pipe(
+    debounceTime(250),
+    switchMap((coordinates) => {
+      return this.http.get<GeocoderResponse>(this.yandexPath, { params: { apikey: this.apiKey, geocode: coordinates.join(','), format: 'json' } });
+    }),
+  );
+
   map: YMap | undefined;
 
+  // Не разобрался с типами.
+  // Сохраняю в переменную, чтобы потом удалять,
+  // когда хочу добавить новую точку для встречи
+  meetingPoint: any;
+
   constructor(
+    private readonly http: HttpClient,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.initMap();
     this.requestLocation();
+
   }
 
   async initMap() {
     await ymaps3.ready;
+
+    // await ymaps3.ready.then(() => {
+    //   ymaps3.import.registerCdn('https://cdn.jsdelivr.net/npm/{package}', ['@yandex/ymaps3-default-ui-theme@latest']);
+    // });
 
     const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer } = ymaps3;
 
@@ -39,33 +64,82 @@ export class MapService {
     });
   }
 
-  setMarkerWithMe(coordinates: number[]) {
-    const { YMapMarker } = ymaps3;
+  async setMarkerWithMe(coordinates: number[]) {
+    // @ts-ignore
+    const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
 
-    const meImg = this.document.createElement('div');
-    meImg.innerHTML = `<img src="https://go.zvuk.com/thumb/1000x0/filters:quality(75):no_upscale()/imgs/2024/09/10/17/6589628/6b4e509b342e307568c339537f0f2cb2bdc03d9e.jpg"
-                        width="24px"
-                        height="24px"
-      >`
+    const mePoint = new YMapDefaultMarker({
+      coordinates: coordinates as LngLat,
+      draggable: false,
+      title: 'Вы сейчас здесь',
+    }) as any;
 
-    // TODO Доделать маркер
-    const marker = new YMapMarker(
-      {
-        coordinates: coordinates as any,
-        draggable: false,
-        mapFollowsOnDrag: true
-      },
-      meImg as HTMLElement,
-    );
-
-    this.map?.addChild(marker);
+    this.map?.addChild(mePoint)
   }
 
   setLocation(location: YMapLocationRequest) {
     this.map?.setLocation(location);
   }
 
-  addPoint() {
-    console.log('add point')
+  /**
+   * Создать ползунок для выбора места встречи
+   */
+  async addPoint(coordinates?: LngLat) {
+    // @ts-ignore
+    const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
+
+    if (this.meetingPoint) {
+      this.map?.removeChild(this.meetingPoint);
+    }
+
+    this.meetingPoint = new YMapDefaultMarker({
+      coordinates: coordinates || this.map?.center as LngLat,
+      draggable: true,
+      title: 'Место встречи',
+      subtitle: 'Передвигайте ползунок',
+      // onDragMove: this.onDragMovePointAHandler,
+      onDragEnd: this.onDragEndHandler.bind(this),
+    }) as any;
+
+    this.map?.addChild(this.meetingPoint)
+  }
+
+  addPointFromInput(coordinates: LngLat) {
+    let location: YMapLocationRequest = {
+      center: coordinates,
+      zoom: 15,
+    };
+
+    this.map?.setLocation(location);
+    this.addPoint(coordinates);
+  }
+
+  // Принимает адрес стрингой, чтобы посмотреть координаты
+  getCoordinatesByAddress(address: string) {
+    return this.http.get<GeocoderResponse>(this.yandexPath, { params: { apikey: this.apiKey, geocode: address, format: 'json' } });
+  }
+
+  // Отслеживает конечную точку ползунка
+  onDragEndHandler(event: LngLat) {
+    this.pointCoordinates$.next(event);
+    this.addPointContainer = this.document.querySelector('.add-point-container');
+    if (this.addPointContainer) {
+      this.addPointContainer.style.display = 'block';
+      this.addPointContainer.style.opacity = '1';
+    }
+  }
+
+  chooseOnMap() {
+    this.addPointContainer = this.document.querySelector('.add-point-container');
+    if (this.addPointContainer) {
+      this.addPointContainer.style.transition = '300ms';
+      this.addPointContainer.style.opacity = '0';
+
+      setTimeout(() => {
+        if (this.addPointContainer) {
+          this.addPointContainer.style.display = 'none';
+        }
+      }, 300);
+    }
   }
 }

@@ -1,5 +1,5 @@
 <button
-  *ngIf="userPoints === 0"
+  *ngIf="!this.offcanvasService.hasOpenOffcanvas()"
   type="button"
   class="btn btn-outline-primary add-point-button"
   (click)="addPoint()"
