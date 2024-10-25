@@ -6,6 +6,8 @@ import { Nullable } from '../../models/nullable';
 import { InputSearchComponent } from '../input-search/input-search.component';
 import { NgIf } from '@angular/common';
 import { MapState, MapService } from '../../services/map.service';
+import { DateTimeControlComponent } from '../date-time-control/date-time-control.component';
+import { ToastsContainer } from '../../shared/toasts-container';
 
 export type PointForm = FormGroup<PointFormGroup>;
 
@@ -22,7 +24,9 @@ export interface PointFormGroup {
     InputSearchComponent,
     FormsModule,
     ReactiveFormsModule,
-    NgIf
+    NgIf,
+    DateTimeControlComponent,
+    ToastsContainer
   ],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss'

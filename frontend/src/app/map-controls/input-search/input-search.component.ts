@@ -1,9 +1,9 @@
-import { Component, forwardRef, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
-import { FormControl, FormGroupDirective, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import { FormGroupDirective, ReactiveFormsModule } from '@angular/forms';
 import { FeatureMember } from '../../models/geocoder-response';
 import { debounceTime, filter, map, mergeMap, Observable, of, OperatorFunction, Subject, takeUntil } from 'rxjs';
-import { MapService } from '../../services/map.service';
+import { MapService, MapState } from '../../services/map.service';
 import { LngLat } from 'ymaps3';
 import { PointForm } from '../map/map.component';
 import { NgIf } from '@angular/common';
@@ -49,7 +49,7 @@ export class InputSearchComponent implements OnDestroy, OnInit {
 
   constructor(
     private readonly mapService: MapService,
-    @Optional() private readonly formGroupDirective: FormGroupDirective
+    @Optional() private readonly formGroupDirective: FormGroupDirective,
   ) {
   }
 
@@ -61,8 +61,13 @@ export class InputSearchComponent implements OnDestroy, OnInit {
         takeUntil(this.unsubscribe$),
       )
       .subscribe(response => {
+        // Смешиваю данные из метадаты, чтобы оставались точные координаты, иначе будут браться координаты совпадений по поиску
+        const responseFeatureMember = response.response?.GeoObjectCollection?.featureMember?.[0];
+        const metadata = response.response?.GeoObjectCollection.metaDataProperty.GeocoderResponseMetaData.Point.pos;
+        responseFeatureMember.GeoObject.Point.pos = metadata;
+
         this.form?.controls.address.patchValue(
-          response.response?.GeoObjectCollection?.featureMember?.[0],
+          responseFeatureMember,
           { emitEvent: false }
         );
       });
@@ -84,6 +89,19 @@ export class InputSearchComponent implements OnDestroy, OnInit {
   }
 
   goNext() {
-    console.log('continue')
+    this.mapService.setMapState(MapState.FILLING_FORM_DATETIME);
+    if (this.form) {
+      this.mapService.addPoint({
+        // Ставим точно такую же точку на тех же координатах, только которую нельзя двигать
+        coordinates: this.form.value.address?.GeoObject.Point.pos.split(' ').map(item => +item) as LngLat,
+        draggable: false,
+      });
+    }
+  }
+
+  cancelForm() {
+    this.form?.reset();
+    this.mapService.removeMeetingPoint();
+    this.mapService.setMapState(MapState.INITIAL);
   }
 }

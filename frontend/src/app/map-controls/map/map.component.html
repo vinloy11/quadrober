@@ -1,5 +1,8 @@
 <ng-container [formGroup]="form" *ngIf="form">
   <div id="map" style="width: 100vw; height: 100vh"></div>
   <app-add-point-button *ngIf="mapService.mapState() === MapState.INITIAL"></app-add-point-button>
-  <app-input-search *ngIf="mapService.mapState() === MapState.FILLING_FORM"></app-input-search>
+  <app-input-search *ngIf="mapService.mapState() === MapState.FILLING_FORM_ADDRESS"></app-input-search>
+  <app-date-time-control *ngIf="mapService.mapState() === MapState.FILLING_FORM_DATETIME"></app-date-time-control>
 </ng-container>
+
+<app-toasts aria-live="polite" aria-atomic="true"></app-toasts>

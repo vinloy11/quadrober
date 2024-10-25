@@ -1,13 +1,15 @@
 import { Inject, Injectable, signal } from '@angular/core';
-import { LngLat, YMap, YMapLocationRequest, YMapMarker } from 'ymaps3';
+import { LngLat, YMap, YMapLocationRequest } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { debounceTime, Observable, Subject, switchMap } from 'rxjs';
+import { debounceTime, Subject, switchMap, tap } from 'rxjs';
 import { GeocoderResponse } from '../models/geocoder-response';
+import { ToastService } from './toast.service';
 
 export enum MapState {
   INITIAL,
-  FILLING_FORM,
+  FILLING_FORM_ADDRESS,
+  FILLING_FORM_DATETIME,
 }
 
 @Injectable({
@@ -35,9 +37,11 @@ export class MapService {
 
   constructor(
     private readonly http: HttpClient,
+    private readonly toastService: ToastService,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.initMap();
+    this.showHintToast();
   }
 
   async initMap() {
@@ -94,7 +98,12 @@ export class MapService {
   /**
    * Создать ползунок для выбора места встречи
    */
-  async addPoint(coordinates?: LngLat) {
+  async addPoint({ coordinates, draggable, title, subtitle }: {
+    coordinates?: LngLat,
+    draggable?: boolean,
+    title?: string,
+    subtitle?: string,
+  } = {}) {
     try {
       // @ts-ignore
       const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
@@ -105,9 +114,9 @@ export class MapService {
 
       this.meetingPoint = new YMapDefaultMarker({
         coordinates: coordinates || this.map?.center as LngLat,
-        draggable: true,
-        title: 'Место встречи',
-        subtitle: 'Передвигайте ползунок',
+        draggable: draggable === false ? false : true,
+        title: title || 'Место встречи',
+        subtitle: subtitle || 'Передвигайте ползунок',
         // onDragMove: this.onDragMovePointAHandler,
         onDragEnd: this.onDragEndHandler.bind(this),
       }) as any;
@@ -125,7 +134,7 @@ export class MapService {
     };
 
     this.map?.setLocation(location);
-    this.addPoint(coordinates);
+    this.addPoint({ coordinates });
   }
 
   // Принимает адрес стрингой, чтобы посмотреть координаты
@@ -159,5 +168,34 @@ export class MapService {
 
   setMapState(state: MapState) {
     this.mapState.set(state);
+    this.showHintToast();
+  }
+
+  removeMeetingPoint() {
+    this.map?.removeChild(this.meetingPoint);
+  }
+
+  private showHintToast() {
+    this.toastService.clear();
+
+    let hintText = '';
+
+    switch (this.mapState()) {
+      case MapState.FILLING_FORM_ADDRESS:
+        hintText = 'Перенесите ползунок или введите в поисковой строке место, где будет встреча';
+        break;
+      case MapState.FILLING_FORM_DATETIME:
+        hintText = 'Выберите дату и время, когда вы планируете придти в указанное место';
+        break;
+      case MapState.INITIAL:
+        hintText = 'Выберите уже существующую встречу или создайте свою нажав на кнопку "Запланировать встречу"';
+        break;
+    }
+
+    this.toastService.show({
+      text: hintText,
+      classname: 'bg-primary text-light',
+      delay: 10000,
+    });
   }
 }

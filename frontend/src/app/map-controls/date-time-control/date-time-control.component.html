@@ -1,0 +1,11 @@
+<ng-container [formGroup]="form" *ngIf="form">
+  <input class="form-control" formControlName="pointDateTime" type="datetime-local" [min]="currentDate" max="">
+
+  <div class="button-container mt-3" >
+    <button type="button" class="btn btn-primary btn-sm" (click)="goPrev()">Назад</button>
+
+    @if (form.controls.pointDateTime) {
+      <button type="button" class="btn btn-primary btn-sm" (click)="goNext()">Продолжить</button>
+    }
+  </div>
+</ng-container>

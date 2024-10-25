@@ -1,0 +1,9 @@
+@import "../../styles/palete";
+
+:host {
+  @include map-control;
+}
+
+.button-container {
+  @include point-form-actions;
+}

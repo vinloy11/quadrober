@@ -22,7 +22,7 @@ export class AddPointButtonComponent {
   }
 
   addPoint() {
-    this.mapService.setMapState(MapState.FILLING_FORM);
+    this.mapService.setMapState(MapState.FILLING_FORM_ADDRESS);
     this.mapService.addPoint();
   }
 }
