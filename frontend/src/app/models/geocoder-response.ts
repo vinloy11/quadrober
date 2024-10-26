@@ -1,5 +1,3 @@
-import { LngLat } from 'ymaps3';
-
 export interface GeocoderResponse {
   response: GeoObjectCollection;
 }
