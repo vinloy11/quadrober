@@ -6,6 +6,8 @@ import com.shtrokfm.quadrober.model.DeleteFollowerRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/meetings")
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class MeetingController {
   }
 
   @PostMapping
-  public Meeting create(@RequestBody Meeting meeting) {
+  public List<Meeting> create(@RequestBody Meeting meeting) {
     return this.meetingService.create(meeting);
   }
 

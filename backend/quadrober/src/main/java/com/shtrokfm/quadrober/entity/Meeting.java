@@ -1,8 +1,10 @@
 package com.shtrokfm.quadrober.entity;
 
-import com.shtrokfm.quadrober.model.GeocoderResponse;
+import com.shtrokfm.quadrober.model.Address;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -12,6 +14,8 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Meeting {
   @Id
   private String id;
@@ -21,11 +25,11 @@ public class Meeting {
   private User owner;
 
   @DBRef
-  List<User> followers;
+  private List<User> followers;
 
   @NotNull
-  GeocoderResponse address;
+  private Address address;
 
   @NotNull
-  Instant datetime;
+  private Instant meetingDateTime;
 }
