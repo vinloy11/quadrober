@@ -1,12 +1,14 @@
 package com.shtrokfm.quadrober.meeting;
 
 import com.shtrokfm.quadrober.entity.Meeting;
+import com.shtrokfm.quadrober.model.CreateMeetingResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +21,7 @@ public class MeetingService {
    * @param meeting
    * @return
    */
-  public List<Meeting> create(Meeting meeting) {
+  public CreateMeetingResponse create(Meeting meeting) {
     double[] pointCoordinates = meeting.getAddress().getPoint();
     double radiusInMeters = 1000.0;
 
@@ -37,12 +39,16 @@ public class MeetingService {
       endOfDay
     );
 
+    Optional<Meeting> newMeeting = Optional.empty();
+
     if (nearMeetings.isEmpty()) {
-      this.meetingRepository.save(meeting);
+      newMeeting = Optional.of(this.meetingRepository.save(meeting));
     }
 
+    // { id: 'string',  nearMeetings: Meeting[] }
+
     // Если список пустой, значит создали встречу
-    return nearMeetings;
+    return new CreateMeetingResponse(newMeeting.map(Meeting::getId).orElse(null), nearMeetings);
   }
 
   public Meeting delete(String meetingId) {

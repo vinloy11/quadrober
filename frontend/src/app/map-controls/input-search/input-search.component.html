@@ -10,13 +10,13 @@
     [inputFormatter]="formatter"/>
 
   <ng-template #rt let-r="result" let-t="term">
-    <span style="white-space: pre-line;">{{ r.GeoObject?.description }} {{ r.GeoObject?.name }}</span>
+    <span style="white-space: pre-line;">{{ r?.description }} {{ r?.name }}</span>
   </ng-template>
 
   <div class="button-container mt-3">
     <button type="button" class="btn btn-primary btn-sm" (click)="cancelForm()">Отменить</button>
 
-    @if (form.controls.address.value?.GeoObject) {
+    @if (form.value.address) {
       <button type="button" class="btn btn-primary btn-sm" (click)="goNext()">Продолжить</button>
     }
   </div>

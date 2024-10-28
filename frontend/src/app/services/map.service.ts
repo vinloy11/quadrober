@@ -2,9 +2,10 @@ import { Inject, Injectable, signal } from '@angular/core';
 import { LngLat, YMap, YMapLocationRequest } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { debounceTime, Subject, switchMap, tap } from 'rxjs';
+import { debounceTime, Subject, switchMap, map } from 'rxjs';
 import { GeocoderResponse } from '../models/geocoder-response';
 import { ToastService } from './toast.service';
+import { Address } from '../models/meeting/address';
 
 export enum MapState {
   INITIAL,
@@ -17,7 +18,6 @@ export enum MapState {
 })
 export class MapService {
   mapState = signal(MapState.INITIAL);
-  addPointContainer: HTMLElement | null = null;
   yandexPath = 'https://geocode-maps.yandex.ru/1.x/';
   apiKey = '3aa9f3c7-cef8-4674-8143-9764dfe005ea';
   pointCoordinates$ = new Subject<LngLat>();
@@ -26,6 +26,9 @@ export class MapService {
     switchMap((coordinates) => {
       return this.http.get<GeocoderResponse>(this.yandexPath, { params: { apikey: this.apiKey, geocode: coordinates.join(','), format: 'json' } });
     }),
+    map((response): Address => {
+      return this.geocoderResponseToAddress(response, true);
+    })
   );
 
   map: YMap | undefined;
@@ -42,6 +45,28 @@ export class MapService {
   ) {
     this.initMap();
     this.showHintToast();
+  }
+
+  /**
+   * Преобразование формата ответа от яндекса в формат для бэкенда
+   * @param response
+   * @param enableFillMetadataCoordinates - Берет координаты из метадаты,
+   * чтобы показывать точные данные клика пользователя. При поиске через инпут должен быть отключен, если поиск через ползунок - включен
+   */
+  geocoderResponseToAddress({response}: GeocoderResponse, enableFillMetadataCoordinates: boolean = false): Address {
+    const responseFeatureMember = response?.GeoObjectCollection?.featureMember?.[0];
+
+    if (enableFillMetadataCoordinates) {
+      // Смешиваю данные из метадаты, чтобы оставались точные координаты, иначе будут браться координаты совпадений по поиску
+      const metadata = response?.GeoObjectCollection.metaDataProperty.GeocoderResponseMetaData.Point.pos;
+      responseFeatureMember.GeoObject.Point.pos = metadata;
+    }
+
+    return {
+      point: responseFeatureMember?.GeoObject.Point.pos.split(' ').map(i => +i),
+      description: responseFeatureMember?.GeoObject.description,
+      name: responseFeatureMember?.GeoObject.name,
+    }
   }
 
   async initMap() {
@@ -139,31 +164,17 @@ export class MapService {
 
   // Принимает адрес стрингой, чтобы посмотреть координаты
   getCoordinatesByAddress(address: string) {
-    return this.http.get<GeocoderResponse>(this.yandexPath, { params: { apikey: this.apiKey, geocode: address, format: 'json' } });
+    return this.http.get<GeocoderResponse>(this.yandexPath, { params: { apikey: this.apiKey, geocode: address, format: 'json' } })
+      .pipe(
+        map((response): Address[] => {
+          return this.geocoderResponseListToAddress(response);
+        })
+      );
   }
 
   // Отслеживает конечную точку ползунка
   onDragEndHandler(event: LngLat) {
     this.pointCoordinates$.next(event);
-    this.addPointContainer = this.document.querySelector('.add-point-container');
-    if (this.addPointContainer) {
-      this.addPointContainer.style.display = 'block';
-      this.addPointContainer.style.opacity = '1';
-    }
-  }
-
-  chooseOnMap() {
-    this.addPointContainer = this.document.querySelector('.add-point-container');
-    if (this.addPointContainer) {
-      this.addPointContainer.style.transition = '300ms';
-      this.addPointContainer.style.opacity = '0';
-
-      setTimeout(() => {
-        if (this.addPointContainer) {
-          this.addPointContainer.style.display = 'none';
-        }
-      }, 300);
-    }
   }
 
   setMapState(state: MapState) {
@@ -197,5 +208,15 @@ export class MapService {
       classname: 'bg-primary text-light',
       delay: 10000,
     });
+  }
+
+  private geocoderResponseListToAddress({response}: GeocoderResponse): Address[] {
+    const responseFeatureMembers = response?.GeoObjectCollection?.featureMember;
+
+    return responseFeatureMembers?.map(responseFeatureMember => ({
+      point: responseFeatureMember?.GeoObject.Point.pos.split(' ').map(i => +i),
+      description: responseFeatureMember?.GeoObject.description,
+      name: responseFeatureMember?.GeoObject.name,
+    }));
   }
 }

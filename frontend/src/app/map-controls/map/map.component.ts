@@ -8,11 +8,12 @@ import { NgIf } from '@angular/common';
 import { MapState, MapService } from '../../services/map.service';
 import { DateTimeControlComponent } from '../date-time-control/date-time-control.component';
 import { ToastsContainer } from '../../shared/toasts-container';
+import { Address } from '../../models/meeting/address';
 
 export type PointForm = FormGroup<PointFormGroup>;
 
 export interface PointFormGroup {
-  address: FormControl<Nullable<FeatureMember>>,
+  address: FormControl<Nullable<Address>>,
   pointDateTime: FormControl<Nullable<Date | string>>
 }
 
@@ -39,7 +40,7 @@ export class MapComponent {
     protected readonly mapService: MapService
   ) {
     this.form = this.fb.group({
-      address: new FormControl<Nullable<FeatureMember>>(null),
+      address: new FormControl<Nullable<Address>>(null),
       pointDateTime: new FormControl<Nullable<Date | string>>(null),
     });
   }

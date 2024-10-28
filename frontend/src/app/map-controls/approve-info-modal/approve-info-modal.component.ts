@@ -20,7 +20,7 @@ import { DatePipe, NgIf } from '@angular/common';
     <div class="modal-body" *ngIf="form?.value as formValue">
       <div>
         <div class="text-muted">Место встречи</div>
-        <strong>{{ formValue.address?.GeoObject?.description }} {{ formValue.address?.GeoObject?.name }}</strong>
+        <strong>{{ formValue.address?.description }} {{ formValue.address?.name }}</strong>
       </div>
       <div class="mt-2">
         <div class="text-muted">Время встречи</div>

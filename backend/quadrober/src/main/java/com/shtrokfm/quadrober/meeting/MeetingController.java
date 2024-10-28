@@ -2,11 +2,16 @@ package com.shtrokfm.quadrober.meeting;
 
 import com.shtrokfm.quadrober.entity.Meeting;
 import com.shtrokfm.quadrober.model.AddFollowerRequest;
+import com.shtrokfm.quadrober.model.CreateMeetingResponse;
 import com.shtrokfm.quadrober.model.DeleteFollowerRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+/**
+ * Контроллер для CRUD операций над встречами
+ */
 
 @RestController
 @RequestMapping("/meetings")
@@ -19,8 +24,14 @@ public class MeetingController {
     return this.meetingService.getById(meetingId);
   }
 
+  /**
+   * Создание встречи
+   *
+   * @param meeting
+   * @return
+   */
   @PostMapping
-  public List<Meeting> create(@RequestBody Meeting meeting) {
+  public CreateMeetingResponse create(@RequestBody Meeting meeting) {
     return this.meetingService.create(meeting);
   }
 

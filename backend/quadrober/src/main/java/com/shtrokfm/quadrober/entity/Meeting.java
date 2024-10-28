@@ -32,4 +32,6 @@ public class Meeting {
 
   @NotNull
   private Instant meetingDateTime;
+
+  // TODO Добавить поля created, updated
 }
