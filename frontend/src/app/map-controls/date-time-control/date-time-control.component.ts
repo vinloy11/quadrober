@@ -11,7 +11,7 @@ import { merge, Subject, take } from 'rxjs';
 import { Meeting } from '../../models/meeting/meeting';
 import { MeetingService } from '../../services/meeting.service';
 import { ToastService } from '../../services/toast.service';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-date-time-control',
@@ -38,6 +38,7 @@ export class DateTimeControlComponent implements OnInit {
     private readonly modalService: NgbModal,
     private readonly meetingService: MeetingService,
     private readonly toastService: ToastService,
+    private readonly router: Router,
     @Optional() private readonly formGroupDirective: FormGroupDirective,
   ) {
   }
@@ -86,17 +87,18 @@ export class DateTimeControlComponent implements OnInit {
           this.meetingService.create(meeting).pipe(
             take(1),
           ).subscribe((response) => {
-            console.log(response);
             this.form?.reset();
             this.mapService.mapState.set(MapState.INITIAL);
 
-            // TODO Добавить отображение результата
             if (response.meetingId) {
+              this.router.navigate(['/meetings/', response.meetingId]);
+
               this.toastService.show({
                 text: 'Ваша встреча успешно создана',
                 classname: 'bg-success text-light',
                 delay: 10000,
               });
+              // TODO Отображать список ближайших встреч
             } else if (response.nearMeetings.length) {
               this.toastService.show({
                 text: 'Уже есть встречи в это время в этом месте',

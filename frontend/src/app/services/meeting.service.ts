@@ -25,9 +25,14 @@ export class MeetingService {
    * @return Meeting[]
    */
   create(meeting: Meeting) {
-    return this.http.post<CreateMeetingResponse>(this.apiPath, meeting, {
-      observe: 'body',
-      responseType: 'json',
-    });
+    return this.http.post<CreateMeetingResponse>(this.apiPath, meeting);
+  }
+
+  /**
+   * Получение встречи по id
+   * @param meetingId
+   */
+  getById({meetingId}: { meetingId: string }) {
+    return this.http.get<Meeting>(`${this.apiPath}/${meetingId}`);
   }
 }
