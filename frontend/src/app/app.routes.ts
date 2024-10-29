@@ -3,5 +3,6 @@ import { MeetingInitializerComponent } from './meeting/meeting-initializer.compo
 
 export const routes: Routes = [
   { path: 'meetings/:meetingId', component: MeetingInitializerComponent },
+  { path: 'settings/:meetingId', component: MeetingInitializerComponent },
   { path: '**', redirectTo: '' }
 ];

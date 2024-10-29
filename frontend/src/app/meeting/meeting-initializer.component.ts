@@ -3,7 +3,9 @@ import { MeetingComponent } from './meeting.component';
 import { MeetingService } from '../services/meeting.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { filter, merge, Subject, takeUntil } from 'rxjs';
-import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
+import { NgbOffcanvas, NgbOffcanvasRef } from '@ng-bootstrap/ng-bootstrap';
+import { Nullable } from '../models/nullable';
+import { NavigationService } from '../services/navigation.service';
 
 @Component({
   selector: 'app-meeting-initializer',
@@ -14,12 +16,14 @@ import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 })
 export class MeetingInitializerComponent implements OnInit, OnDestroy {
   private readonly unsubscribe$ = new Subject<void>();
+  private meetingComponentCanvasRef: Nullable<NgbOffcanvasRef> = null;
 
   constructor(
     private readonly meetingService: MeetingService,
     private readonly ngbOffCanvas: NgbOffcanvas,
-    private route: ActivatedRoute,
-    private router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly navigationService: NavigationService,
   ) {
   }
 
@@ -41,18 +45,18 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
 
       if (!meeting) return;
 
-      const meetingComponentCanvasRef = this.ngbOffCanvas.open(MeetingComponent);
-      const meetingComponent = meetingComponentCanvasRef.componentInstance as MeetingComponent;
+      this.meetingComponentCanvasRef = this.ngbOffCanvas.open(MeetingComponent);
+      const meetingComponent = this.meetingComponentCanvasRef.componentInstance as MeetingComponent;
       meetingComponent.meeting = meeting;
 
       merge(
-        meetingComponentCanvasRef.closed,
-        meetingComponentCanvasRef.dismissed,
+        this.meetingComponentCanvasRef.closed,
+        this.meetingComponentCanvasRef.dismissed,
       ).pipe(takeUntil(this.unsubscribe$)).subscribe(() => {
-        this.router.navigate(['/']);
+        this.goBackOrHome();
       });
     } catch (e) {
-      this.router.navigate(['/']);
+      this.goBackOrHome();
     }
 
   }
@@ -60,5 +64,19 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
+
+    this.meetingComponentCanvasRef?.close();
+  }
+
+  goBackOrHome(): void {
+    const previousUrl = this.navigationService.goBack();
+
+    if (previousUrl) {
+      // Если есть предыдущий URL, возвращаемся на него
+      this.router.navigateByUrl(previousUrl);
+    } else {
+      // Если нет, перенаправляем на главную страницу
+      this.router.navigate(['/']);
+    }
   }
 }
