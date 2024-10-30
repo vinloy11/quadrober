@@ -29,6 +29,15 @@ export class MeetingService {
   }
 
   /**
+   * Изменение встречи
+   * @param meeting
+   * @return Meeting[]
+   */
+  update(meeting: Meeting) {
+    return this.http.put<Meeting>(this.apiPath, meeting);
+  }
+
+  /**
    * Получение встречи по id
    * @param meetingId
    */

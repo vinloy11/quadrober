@@ -1,14 +1,14 @@
 import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { NgbTypeahead } from '@ng-bootstrap/ng-bootstrap';
 import { FormGroupDirective, ReactiveFormsModule } from '@angular/forms';
-import { FeatureMember } from '../../models/geocoder-response';
 import { debounceTime, filter, map, mergeMap, Observable, of, OperatorFunction, Subject, takeUntil } from 'rxjs';
 import { MapService, MapState } from '../../services/map.service';
 import { LngLat } from 'ymaps3';
 import { PointForm } from '../map/map.component';
-import { JsonPipe, NgIf } from '@angular/common';
+import { DatePipe, JsonPipe, NgIf } from '@angular/common';
 import { Nullable } from '../../models/nullable';
 import { Address } from '../../models/meeting/address';
+import { DATE_TIME_LOCAL } from '../../shared/date-format';
 
 @Component({
   selector: 'app-input-search',
@@ -17,10 +17,11 @@ import { Address } from '../../models/meeting/address';
     NgbTypeahead,
     ReactiveFormsModule,
     NgIf,
-    JsonPipe
+    JsonPipe,
   ],
   templateUrl: './input-search.component.html',
   styleUrl: './input-search.component.scss',
+  providers: [DatePipe],
 })
 export class InputSearchComponent implements OnDestroy, OnInit {
   form: Nullable<PointForm> = null;
@@ -51,6 +52,7 @@ export class InputSearchComponent implements OnDestroy, OnInit {
 
   constructor(
     private readonly mapService: MapService,
+    private readonly datePipe: DatePipe,
     @Optional() private readonly formGroupDirective: FormGroupDirective,
   ) {
   }
@@ -75,6 +77,8 @@ export class InputSearchComponent implements OnDestroy, OnInit {
         this.mapService.addPointFromInput(address.point as LngLat);
       }
     })
+
+    this.fillFormFromEditableMeeting()
   }
 
   ngOnDestroy() {
@@ -97,5 +101,18 @@ export class InputSearchComponent implements OnDestroy, OnInit {
     this.form?.reset();
     this.mapService.removeMeetingPoint();
     this.mapService.setMapState(MapState.INITIAL);
+  }
+
+  private fillFormFromEditableMeeting() {
+    const meeting = this.mapService.editableMeeting();
+
+    if (!meeting) return;
+
+    const formattedDateTime = this.datePipe.transform(meeting.meetingDateTime, DATE_TIME_LOCAL);
+
+    this.form?.patchValue({
+      address: meeting.address,
+      pointDateTime: formattedDateTime,
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable, signal } from '@angular/core';
+import { Inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { LngLat, YMap, YMapLocationRequest } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -6,6 +6,8 @@ import { debounceTime, Subject, switchMap, map } from 'rxjs';
 import { GeocoderResponse } from '../models/geocoder-response';
 import { ToastService } from './toast.service';
 import { Address } from '../models/meeting/address';
+import { Meeting } from '../models/meeting/meeting';
+import { Nullable } from '../models/nullable';
 
 export enum MapState {
   INITIAL,
@@ -18,6 +20,7 @@ export enum MapState {
 })
 export class MapService {
   mapState = signal(MapState.INITIAL);
+  editableMeeting: WritableSignal<Nullable<Meeting>> = signal(null);
   yandexPath = 'https://geocode-maps.yandex.ru/1.x/';
   apiKey = '3aa9f3c7-cef8-4674-8143-9764dfe005ea';
   pointCoordinates$ = new Subject<LngLat>();

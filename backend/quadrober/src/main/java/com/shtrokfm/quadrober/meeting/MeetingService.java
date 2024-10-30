@@ -71,7 +71,7 @@ public class MeetingService {
 
     // Если встречи не нашлось, кидаем 404
     if (matchMeeting == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Не найдена встреча по данному идентификатору");
     }
 
     // Проверяем нет ли встреч в этом месте в это время

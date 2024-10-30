@@ -23,6 +23,7 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
     private readonly ngbOffCanvas: NgbOffcanvas,
     private readonly route: ActivatedRoute,
     private readonly navigationService: NavigationService,
+    private readonly router: Router,
   ) {
   }
 
@@ -51,11 +52,15 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
       merge(
         this.meetingComponentCanvasRef.closed,
         this.meetingComponentCanvasRef.dismissed,
-      ).pipe(takeUntil(this.unsubscribe$)).subscribe(() => {
-        this.goBackOrHome();
+      ).pipe(takeUntil(this.unsubscribe$)).subscribe((isEdit) => {
+        if (isEdit) {
+          this.router.navigate(['/']);
+        } else {
+          this.navigationService.goBack();
+        }
       });
     } catch (e) {
-      this.goBackOrHome();
+      this.navigationService.goBack();
     }
 
   }
@@ -65,9 +70,5 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
     this.unsubscribe$.complete();
 
     this.meetingComponentCanvasRef?.close();
-  }
-
-  goBackOrHome(): void {
-    this.navigationService.goBack();
   }
 }

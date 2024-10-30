@@ -7,7 +7,7 @@ import { PointForm } from '../map/map.component';
 import { LngLat } from 'ymaps3';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ApproveInfoModalComponent } from '../approve-info-modal/approve-info-modal.component';
-import { merge, Subject, take } from 'rxjs';
+import { catchError, EMPTY, merge, take } from 'rxjs';
 import { Meeting } from '../../models/meeting/meeting';
 import { MeetingService } from '../../services/meeting.service';
 import { ToastService } from '../../services/toast.service';
@@ -58,11 +58,14 @@ export class DateTimeControlComponent implements OnInit {
     }
   }
 
-  goNext(successMetingTemplate: TemplateRef<any>) {
+  goNext() {
     if (!this.form) return;
 
     const component = this.modalService.open(ApproveInfoModalComponent);
-    component.componentInstance.form = this.form;
+    const componentInstance = component.componentInstance as ApproveInfoModalComponent;
+    const isEditable = !!this.mapService.editableMeeting();
+    componentInstance.form = this.form;
+    componentInstance.isEditable = isEditable;
 
     merge(
       component.dismissed,
@@ -84,32 +87,85 @@ export class DateTimeControlComponent implements OnInit {
             address: formValue.address
           }
 
-          this.meetingService.create(meeting).pipe(
-            take(1),
-          ).subscribe((response) => {
-            this.form?.reset();
-            this.mapService.mapState.set(MapState.INITIAL);
-
-            if (response.meetingId) {
-              this.router.navigate(['/meetings/', response.meetingId]);
-
-              this.toastService.show({
-                text: 'Ваша встреча успешно создана',
-                classname: 'bg-success text-light',
-                delay: 10000,
-              });
-              // TODO Отображать список ближайших встреч
-            } else if (response.nearMeetings.length) {
-              this.toastService.show({
-                text: 'Уже есть встречи в это время в этом месте',
-                classname: 'bg-danger text-light',
-                delay: 10000,
+          if (isEditable) {
+            const editableMeeting = this.mapService.editableMeeting();
+            if (editableMeeting) {
+              this.updateMeeting({
+                ...editableMeeting,
+                meetingDateTime: new Date(formValue?.pointDateTime).toJSON(),
+                address: formValue.address,
               });
             }
-          });
+          } else {
+            this.createMeeting(meeting);
+          }
         } else {
           this.mapService.mapState.set(MapState.FILLING_FORM_DATETIME);
         }
       })
+  }
+
+  updateMeeting(meeting: Meeting) {
+    this.meetingService.update(meeting).pipe(
+      take(1),
+      catchError(err => {
+        this.toastService.show({
+          text: err?.error?.title || 'Произошла ошибка во время обновления. Попробуйте еще раз',
+          classname: 'bg-danger text-light',
+          delay: 5000,
+        });
+        return EMPTY;
+      }),
+    ).subscribe(
+      (response) => {
+        this.form?.reset();
+        this.mapService.mapState.set(MapState.INITIAL);
+
+        if (response.id) {
+          this.router.navigate(['/meetings/', response.id]);
+
+          this.toastService.show({
+            text: 'Ваша встреча успешно обновлена',
+            classname: 'bg-success text-light',
+            delay: 10000,
+          });
+        }
+      },
+    );
+  }
+
+  createMeeting(meeting: Meeting) {
+    this.meetingService.create(meeting).pipe(
+      take(1),
+      catchError(err => {
+        this.toastService.show({
+          text: err?.error?.title || 'Произошла ошибка во время создания. Попробуйте еще раз',
+          classname: 'bg-danger text-light',
+          delay: 5000,
+        });
+
+        return EMPTY;
+      }),
+    ).subscribe((response) => {
+      this.form?.reset();
+      this.mapService.mapState.set(MapState.INITIAL);
+
+      if (response.meetingId) {
+        this.router.navigate(['/meetings/', response.meetingId]);
+
+        this.toastService.show({
+          text: 'Ваша встреча успешно создана',
+          classname: 'bg-success text-light',
+          delay: 10000,
+        });
+        // TODO Отображать список ближайших встреч
+      } else if (response.nearMeetings.length) {
+        this.toastService.show({
+          text: 'Уже есть встречи в это время в этом месте',
+          classname: 'bg-danger text-light',
+          delay: 10000,
+        });
+      }
+    },);
   }
 }

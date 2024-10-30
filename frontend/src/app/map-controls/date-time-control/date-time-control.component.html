@@ -6,11 +6,7 @@
     <button type="button" class="btn btn-primary btn-sm" (click)="goPrev()">Назад</button>
 
     @if (form.value.pointDateTime) {
-      <button type="button" class="btn btn-primary btn-sm" (click)="goNext(successMetingTemplate)">Продолжить</button>
+      <button type="button" class="btn btn-primary btn-sm" (click)="goNext()">Продолжить</button>
     }
   </div>
 </ng-container>
-
-<ng-template #successMetingTemplate>
-  <a routerLink="/" >Ваша встреча</a>
-</ng-template>

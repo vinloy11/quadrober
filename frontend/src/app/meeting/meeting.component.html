@@ -2,24 +2,27 @@
 @if (meeting) {
   <div class="card">
     <div class="card-body">
-      <h5 class="card-title">Встреча</h5>
-      <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+      <h5 class="card-title card-actions">
+        <span>Встреча</span>
+
+        <button class="btn card-link btn-link" (click)="edit()"><i class="bi bi-pencil-fill"></i></button>
+      </h5>
+      <p class="card-text mt-3">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
     </div>
     <ul class="list-group list-group-flush">
       @if (meeting.owner) {
         <li class="list-group-item">
           Организатор
-          <a [routerLink]="['/profile/', meeting.owner?.id]" class="card-link">{{ meeting.owner.name }}</a>
+          <a [routerLink]="['/profile/', meeting.owner.id]" class="card-link">{{ meeting.owner.name }}</a>
         </li>
       }
       <li class="list-group-item">{{ meeting.address.description }} {{ meeting.address.name }}</li>
-      <li class="list-group-item">{{ meeting.meetingDateTime |  date : 'yyyy-MM-dd HH:mm' }}</li>
+      <li class="list-group-item">{{ meeting.meetingDateTime |  date : DATE_TIME }}</li>
     </ul>
-    <div class="card-body">
-      <a class="card-link" (click)="goBack()">Назад</a>
+    <div class="card-body card-actions">
+      <button class="btn btn-outline-primary card-link" (click)="goBack()"><i class="bi bi-arrow-left"></i></button>
       <!--  TODO Добавить присоединение к встрече    -->
       <a href="#" class="card-link">Присоединиться к встрече</a>
     </div>
   </div>
-<!--  <a routerLink="/settings/671e56474a888b7c7d914fbc">НаСтройки</a>-->
 }

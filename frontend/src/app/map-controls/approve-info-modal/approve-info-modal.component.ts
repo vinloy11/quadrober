@@ -3,13 +3,14 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { PointForm } from '../map/map.component';
 import { Nullable } from '../../models/nullable';
 import { DatePipe, NgIf } from '@angular/common';
+import { DATE_TIME } from '../../shared/date-format';
 
 @Component({
   selector: 'ngbd-modal-confirm',
   standalone: true,
   template: `
     <div class="modal-header">
-      <h4 class="modal-title" id="modal-title">Подтверждение встречи</h4>
+      <h4 class="modal-title" id="modal-title">{{ isEditable ? 'Подтверждение изменения встречи' : 'Подтверждение встречи' }}</h4>
       <button
         type="button"
         class="btn-close"
@@ -24,12 +25,12 @@ import { DatePipe, NgIf } from '@angular/common';
       </div>
       <div class="mt-2">
         <div class="text-muted">Время встречи</div>
-        <strong>{{ formValue.pointDateTime | date : 'dd.MM.yyyy HH:mm' }}</strong>
+        <strong>{{ formValue.pointDateTime | date : DATE_TIME }}</strong>
       </div>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss(false)">Отмена</button>
-      <button type="button" class="btn btn-primary" (click)="modal.close(true)">Запланировать встречу</button>
+      <button type="button" class="btn btn-primary" (click)="modal.close(true)">{{ isEditable ? 'Изменить встречу' : 'Запланировать встречу' }}</button>
     </div>
   `,
   imports: [
@@ -39,6 +40,8 @@ import { DatePipe, NgIf } from '@angular/common';
 })
 export class ApproveInfoModalComponent {
   @Input() form: Nullable<PointForm> = null;
+  @Input() isEditable = false;
 
   modal = inject(NgbActiveModal);
+  protected readonly DATE_TIME = DATE_TIME;
 }
