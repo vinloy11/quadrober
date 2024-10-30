@@ -76,8 +76,8 @@ export class DateTimeControlComponent implements OnInit {
 
           const meeting: Meeting = {
             owner: {
-              id: 'string',
-              name: 'string',
+              id: '671cc5a63774c6062f9cb8e6',
+              name: 'Andrew1',
             },
             followers: [],
             meetingDateTime: new Date(formValue?.pointDateTime).toJSON(),

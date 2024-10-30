@@ -22,7 +22,6 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
     private readonly meetingService: MeetingService,
     private readonly ngbOffCanvas: NgbOffcanvas,
     private readonly route: ActivatedRoute,
-    private readonly router: Router,
     private readonly navigationService: NavigationService,
   ) {
   }
@@ -69,14 +68,6 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
   }
 
   goBackOrHome(): void {
-    const previousUrl = this.navigationService.goBack();
-
-    if (previousUrl) {
-      // Если есть предыдущий URL, возвращаемся на него
-      this.router.navigateByUrl(previousUrl);
-    } else {
-      // Если нет, перенаправляем на главную страницу
-      this.router.navigate(['/']);
-    }
+    this.navigationService.goBack();
   }
 }

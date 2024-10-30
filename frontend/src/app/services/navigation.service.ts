@@ -21,9 +21,17 @@ export class NavigationService {
     return this.previousUrls;
   }
 
-  goBack(): string | null {
+  goBack() {
     // Удаляем последний URL из массива и возвращаем его
     this.previousUrls.pop();
-    return this.previousUrls.pop() || null;
+    const previousUrl = this.previousUrls.pop() || null;
+
+    if (previousUrl) {
+      // Если есть предыдущий URL, возвращаемся на него
+      this.router.navigateByUrl(previousUrl);
+    } else {
+      // Если нет, перенаправляем на главную страницу
+      this.router.navigate(['/']);
+    }
   }
 }

@@ -80,7 +80,7 @@ export class MapService {
 
     const defaultLocation: YMapLocationRequest = { center: [37.623082, 55.75254], zoom: 15 }
 
-    this.map = new YMap(this.document.getElementById('map') as HTMLElement, { location: defaultLocation });
+    this.map = new YMap(this.document.getElementById('map') as HTMLElement, { location: defaultLocation, theme: 'dark' });
 
     this.map.addChild(new YMapDefaultSchemeLayer({})).addChild(new YMapDefaultFeaturesLayer({}));
 

@@ -6,12 +6,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,20 @@ public class MeetingService {
    * @return
    */
   public CreateMeetingResponse create(Meeting meeting) {
+    List<Meeting> nearMeetings = this.findNearMeetings(meeting);
+
+    Optional<Meeting> newMeeting = Optional.empty();
+
+    if (nearMeetings.isEmpty()) {
+      newMeeting = Optional.of(this.meetingRepository.save(meeting));
+    }
+
+    // { id: 'string',  nearMeetings: Meeting[] }
+    // Если список пустой, значит создали встречу
+    return new CreateMeetingResponse(newMeeting.map(Meeting::getId).orElse(null), nearMeetings);
+  }
+
+  private List<Meeting> findNearMeetings(Meeting meeting) {
     double[] pointCoordinates = meeting.getAddress().getPoint();
     double radiusInMeters = 1000.0;
 
@@ -34,24 +52,13 @@ public class MeetingService {
     Instant startOfDay = meetingDateTime.atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay(ZoneId.of("UTC")).toInstant(); // Начало дня в UTC
     Instant endOfDay = startOfDay.plusSeconds(86400); // Конец дня (86400 секунд = 1 день)
 
-    List<Meeting> nearMeetings = this.meetingRepository.findByLocationNearInCurrentDay(
+    return this.meetingRepository.findByLocationNearInCurrentDay(
       pointCoordinates[0],
       pointCoordinates[1],
       radiusInMeters,
       startOfDay,
       endOfDay
     );
-
-    Optional<Meeting> newMeeting = Optional.empty();
-
-    if (nearMeetings.isEmpty()) {
-      newMeeting = Optional.of(this.meetingRepository.save(meeting));
-    }
-
-    // { id: 'string',  nearMeetings: Meeting[] }
-
-    // Если список пустой, значит создали встречу
-    return new CreateMeetingResponse(newMeeting.map(Meeting::getId).orElse(null), nearMeetings);
   }
 
   public Meeting delete(String meetingId) {
@@ -59,7 +66,32 @@ public class MeetingService {
   }
 
   public Meeting update(Meeting meeting) {
-    return null;
+    // достаем нашу встречу
+    Meeting matchMeeting = this.meetingRepository.findById(meeting.getId()).orElse(null);
+
+    // Если встречи не нашлось, кидаем 404
+    if (matchMeeting == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    // Проверяем нет ли встреч в этом месте в это время
+    List<Meeting> nearMeetings = this.findNearMeetings(meeting).stream().filter(nearMeeting ->
+      !Objects.equals(meeting.getId(), nearMeeting.getId())).toList();
+
+    if (!nearMeetings.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "В это время в этом месте уже запланирована другая встреча");
+    }
+
+    Meeting updatedMeeting = new Meeting(
+      meeting.getId(),
+      matchMeeting.getOwner(),
+      matchMeeting.getFollowers(),
+      meeting.getAddress(),
+      meeting.getMeetingDateTime()
+    );
+
+    // Обновляем встречу
+    return this.meetingRepository.save(updatedMeeting);
   }
 
   public void addFollower(String meetingId, String followerId) {
@@ -83,7 +115,7 @@ public class MeetingService {
     Meeting meeting = this.meetingRepository.findById(meetingId).orElse(null);
 
     if (meeting == null) {
-      throw new HttpServerErrorException(HttpStatus.NOT_FOUND);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
     return meeting;
