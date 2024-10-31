@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.repository.Query;
 
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 
 // {
@@ -31,4 +30,18 @@ public interface MeetingRepository extends MongoRepository<Meeting, String> {
     Instant startOfDay,
     Instant endOfDay
   );
+
+  @Query(
+    "{ " +
+      "'address.point' : { '$near' : { '$geometry': { 'type': 'Point', 'coordinates': [?0, ?1] }, '$maxDistance': ?2 } }"
+      + "}"
+  )
+  List<Meeting> findNearMeetings(
+    double pointx,
+    double pointy,
+    double distance
+  );
+
+  @Query("{ '$or': [ { 'owner.id': ?0 }, { 'followers.id': ?0 } ] }")
+  List<Meeting> findByUserId(String  id);
 }

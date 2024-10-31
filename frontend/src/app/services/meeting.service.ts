@@ -44,4 +44,8 @@ export class MeetingService {
   getById({meetingId}: { meetingId: string }) {
     return this.http.get<Meeting>(`${this.apiPath}/${meetingId}`);
   }
+
+  getMyMeetings() {
+
+  }
 }
