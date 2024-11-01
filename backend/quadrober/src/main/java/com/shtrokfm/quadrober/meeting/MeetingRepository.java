@@ -45,7 +45,6 @@ public interface MeetingRepository extends MongoRepository<Meeting, String> {
   @Query("{ '$or': [ { 'owner.id': ?0 }, { 'followers.id': ?0 } ] }")
   List<Meeting> findByUserId(String  id);
 
-
   @Query(
     "{ " +
       "'address.point' : { '$geoWithin' : { '$box' : [ " +
@@ -59,5 +58,23 @@ public interface MeetingRepository extends MongoRepository<Meeting, String> {
     double lowerLeftLatitude,
     double upperRightLongitude,
     double upperRightLatitude
+  );
+
+  @Query(
+    "{ " +
+      "'address.point' : { '$geoWithin' : { '$box' : [ " +
+      " [ ?0, ?1 ], " + // Нижний левый угол (долгота, широта)
+      " [ ?2, ?3 ] " + // Верхний правый угол (долгота, широта)
+      " ] } }, " +
+      "'meetingDateTime': { '$gte': ?4, '$lt': ?5 }" + // Убедитесь, что встречи существуют
+      "}"
+  )
+  List<Meeting> findByLocationWithinBoundsAndDateTime(
+    double lowerLeftLongitude,
+    double lowerLeftLatitude,
+    double upperRightLongitude,
+    double upperRightLatitude,
+    Instant startOfDay,
+    Instant endOfDay
   );
 }

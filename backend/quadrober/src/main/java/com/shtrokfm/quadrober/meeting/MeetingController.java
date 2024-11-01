@@ -113,7 +113,8 @@ public class MeetingController {
    */
   @GetMapping("/by-bounds")
   public List<Meeting> getMeetingsByBounds(
-    @RequestParam(value = "bounds") Optional<String> bounds
+    @RequestParam(value = "bounds") Optional<String> bounds,
+    @RequestParam(value = "date", required = false) Optional<String> date
   ) {
     if (bounds.isEmpty()) {
       return new ArrayList<>(); // Возвращаем пустой список, если границы не указаны
@@ -137,8 +138,21 @@ public class MeetingController {
       return new ArrayList<>(); // Возвращаем пустой список, если границы некорректны
     }
 
+    Instant meetingDateTime = null;
+
+    if (date.isPresent()) {
+      try {
+        // Преобразуем строку в Instant
+        meetingDateTime = Instant.parse(date.get());
+      } catch (DateTimeParseException e) {
+        // Обработка ошибки, если строка не соответствует формату
+        // Можно вернуть пустой список или выбросить исключение
+        return new ArrayList<>();
+      }
+    }
+
     // Вызываем сервис для получения встреч по границам
-    return this.meetingService.findNearMeetings(preparedBounds);
+    return this.meetingService.findNearMeetings(preparedBounds, meetingDateTime);
   }
 
   /**

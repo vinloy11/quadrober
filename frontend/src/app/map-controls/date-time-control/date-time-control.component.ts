@@ -54,6 +54,7 @@ export class DateTimeControlComponent implements OnInit {
         // Ставим точно такую же точку на тех же координатах, только которую можно двигать
         coordinates: this.form.value.address?.point as LngLat,
         draggable: true,
+        isEditableMeetingPoint: true,
       });
     }
   }

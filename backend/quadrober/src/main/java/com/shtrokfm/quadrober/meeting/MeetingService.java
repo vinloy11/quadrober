@@ -130,8 +130,8 @@ public class MeetingService {
   }
 
   public List<Meeting> findNearMeetings(
-    double[][] bounds
-//    Instant meetingDateTime
+    double[][] bounds,
+    Instant meetingDateTime
   ) {
     // Верхний левый угол
     double upperLeftLongitude = bounds[0][0]; // Долгота
@@ -141,15 +141,26 @@ public class MeetingService {
     double lowerRightLongitude = bounds[1][0]; // Долгота
     double lowerRightLatitude = bounds[1][1];  // Широта
 
-//    if (meetingDateTime == null) {
-//
-//    }
+    if (meetingDateTime == null) {
+      return this.meetingRepository.findByLocationWithinBounds(
+        upperLeftLongitude,
+        lowerRightLatitude,
+        lowerRightLongitude,
+        upperLeftLatitude
+      );
+    }
 
-    return this.meetingRepository.findByLocationWithinBounds(
+    // Устанавливаем начало и конец встречи;
+    Instant startOfDay = meetingDateTime.atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay(ZoneId.of("UTC")).toInstant(); // Начало дня в UTC
+    Instant endOfDay = startOfDay.plusSeconds(86400); // Конец дня (86400 секунд = 1 день)
+
+    return this.meetingRepository.findByLocationWithinBoundsAndDateTime(
       upperLeftLongitude,
       lowerRightLatitude,
       lowerRightLongitude,
-      upperLeftLatitude
+      upperLeftLatitude,
+      startOfDay,
+      endOfDay
     );
   }
 }

@@ -93,6 +93,7 @@ export class InputSearchComponent implements OnDestroy, OnInit {
         // Ставим точно такую же точку на тех же координатах, только которую нельзя двигать
         coordinates: this.form.value.address?.point as LngLat,
         draggable: false,
+        isEditableMeetingPoint: true,
       });
     }
   }

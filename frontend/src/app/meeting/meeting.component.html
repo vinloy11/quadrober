@@ -1,4 +1,3 @@
-<!-- TODO Добавить UI -->
 @if (meeting) {
   <div class="card">
     <div class="card-body">
@@ -7,7 +6,10 @@
 
         <button class="btn card-link btn-link" (click)="edit()"><i class="bi bi-pencil-fill"></i></button>
       </h5>
-      <p class="card-text mt-3">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+      <p class="card-text mt-3">
+<!--   TODO Добавить описание встречи     -->
+        Some quick example text to build on the card title and make up the bulk of the card's content.
+      </p>
     </div>
     <ul class="list-group list-group-flush">
       @if (meeting.owner) {

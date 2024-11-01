@@ -2,12 +2,15 @@ import { Inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { LngLat, YMap, YMapListener, YMapLocationRequest } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { debounceTime, Subject, switchMap, map } from 'rxjs';
-import { GeocoderResponse } from '../models/geocoder-response';
+import { debounceTime, Subject, switchMap, map, filter, withLatestFrom, BehaviorSubject } from 'rxjs';
+import { GeocoderResponse, Point } from '../models/geocoder-response';
 import { ToastService } from './toast.service';
 import { Address } from '../models/meeting/address';
 import { Meeting } from '../models/meeting/meeting';
 import { Nullable } from '../models/nullable';
+import { YMapUpdateResponse } from '../models/y-map-update-response-location';
+import { MeetingService } from './meeting.service';
+import { MeetingSearchCriteria } from '../models/meeting/meeting-search-criteria';
 
 export enum MapState {
   INITIAL,
@@ -36,6 +39,47 @@ export class MapService {
     })
   );
 
+  // Следим за состоянием обновления карты
+  // В случае, если карта обновляется, подтягиваем список встреч
+  private yMapUpdateResponse$ = new Subject<YMapUpdateResponse>();
+  private actualMeetingPoints$ = new BehaviorSubject<Map<string, Meeting>>(new Map() as any);
+  actualMeetingPointsObservable$ = this.actualMeetingPoints$.asObservable();
+  private meetingPoints$ = this.yMapUpdateResponse$.asObservable()
+    .pipe(
+      debounceTime(250),
+      filter(yMapUpdateResponse => !!yMapUpdateResponse),
+      switchMap((response) => {
+        const bounds = response.location.bounds.map(bound => bound.join(',')).join(';');
+        const criteria: MeetingSearchCriteria = { bounds };
+        return this.meetingService.getMeetings(criteria);
+      }),
+      withLatestFrom(this.actualMeetingPointsObservable$),
+      map(([meetings, actualMeetings]) => {
+        const meetingMap = new Map(meetings.map(meeting => [`${meeting.id}`, meeting]));
+
+        if (actualMeetings) {
+          meetingMap.forEach((value, key) => {
+            if (this.map && !actualMeetings.has(`${value.id}`)) {
+              this.addPoint({
+                coordinates: value.address.point as LngLat,
+                draggable: false,
+                hasTitle: false,
+                hasSubtitle: false
+              });
+            }
+
+            actualMeetings.set(key, value);
+          });
+
+          this.actualMeetingPoints$.next(actualMeetings);
+        } else {
+          this.actualMeetingPoints$.next(meetingMap);
+        }
+
+        return meetings;
+      }),
+    ).subscribe();
+
   map: YMap | undefined;
 
   // Не разобрался с типами.
@@ -46,6 +90,7 @@ export class MapService {
   constructor(
     private readonly http: HttpClient,
     private readonly toastService: ToastService,
+    private readonly meetingService: MeetingService,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.initMap();
@@ -137,30 +182,38 @@ export class MapService {
   /**
    * Создать ползунок для выбора места встречи
    */
-  async addPoint({ coordinates, draggable, title, subtitle }: {
+  async addPoint({ coordinates, draggable, title, subtitle, isEditableMeetingPoint, hasTitle = true, hasSubtitle = true }: {
     coordinates?: LngLat,
     draggable?: boolean,
     title?: string,
     subtitle?: string,
+    isEditableMeetingPoint?: boolean,
+    hasTitle?: boolean,
+    hasSubtitle?: boolean,
   } = {}) {
+
     try {
       // @ts-ignore
       const {YMapDefaultMarker} = await ymaps3.import('@yandex/ymaps3-default-ui-theme');
 
-      if (this.meetingPoint) {
+      if (this.meetingPoint && isEditableMeetingPoint) {
         this.map?.removeChild(this.meetingPoint);
       }
 
-      this.meetingPoint = new YMapDefaultMarker({
+      const newPoint = new YMapDefaultMarker({
         coordinates: coordinates || this.map?.center as LngLat,
         draggable: draggable === false ? false : true,
-        title: title || 'Место встречи',
-        subtitle: subtitle || 'Передвигайте ползунок',
+        title: hasTitle ? title || 'Место встречи' : undefined,
+        subtitle: hasSubtitle ? subtitle || 'Передвигайте ползунок' : undefined,
         // onDragMove: this.onDragMovePointAHandler,
         onDragEnd: this.onDragEndHandler.bind(this),
       }) as any;
 
-      this.map?.addChild(this.meetingPoint)
+      if (isEditableMeetingPoint) {
+        this.meetingPoint = newPoint;
+      }
+
+      this.map?.addChild(newPoint)
     } catch (e) {
 
     }
@@ -173,7 +226,7 @@ export class MapService {
     };
 
     this.map?.setLocation(location);
-    this.addPoint({ coordinates });
+    this.addPoint({ coordinates, isEditableMeetingPoint: true });
   }
 
   // Принимает адрес стрингой, чтобы посмотреть координаты
@@ -234,7 +287,9 @@ export class MapService {
     }));
   }
 
-  private updateHandler(event: any) {
-    console.log(event);
+  private updateHandler(event: YMapUpdateResponse | any) {
+    this.yMapUpdateResponse$.next(event);
+
+    return event;
   }
 }
