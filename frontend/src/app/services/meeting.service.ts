@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Meeting } from '../models/meeting/meeting';
 import { CreateMeetingResponse } from '../models/meeting/create-meeting-response';
+import { SearchCriteria } from '../models/meeting/search-criteria';
 
 /**
  *
@@ -45,7 +46,23 @@ export class MeetingService {
     return this.http.get<Meeting>(`${this.apiPath}/${meetingId}`);
   }
 
+  /**
+   * Получить встречи пользователя
+   */
   getMyMeetings() {
+    return this.http.get<Meeting[]>(`${this.apiPath}/my-meetings`);
+  }
 
+  /**
+   * Получить список встреч по параметрам
+   * @param criteria
+   */
+  getMeetings(criteria: SearchCriteria) {
+    return this.http.get<Meeting[]>(`${this.apiPath}`, {
+      params: {
+        coordinates: criteria.coordinates,
+        date: criteria.date || [],
+      }
+    });
   }
 }

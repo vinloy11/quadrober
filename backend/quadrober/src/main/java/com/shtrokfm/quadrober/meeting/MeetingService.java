@@ -128,4 +128,28 @@ public class MeetingService {
 
     return nearMeetings;
   }
+
+  public List<Meeting> findNearMeetings(
+    double[][] bounds
+//    Instant meetingDateTime
+  ) {
+    // Верхний левый угол
+    double upperLeftLongitude = bounds[0][0]; // Долгота
+    double upperLeftLatitude = bounds[0][1];  // Широта
+
+    // Нижний правый угол
+    double lowerRightLongitude = bounds[1][0]; // Долгота
+    double lowerRightLatitude = bounds[1][1];  // Широта
+
+//    if (meetingDateTime == null) {
+//
+//    }
+
+    return this.meetingRepository.findByLocationWithinBounds(
+      upperLeftLongitude,
+      lowerRightLatitude,
+      lowerRightLongitude,
+      upperLeftLatitude
+    );
+  }
 }

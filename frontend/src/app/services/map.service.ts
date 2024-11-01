@@ -1,5 +1,5 @@
 import { Inject, Injectable, signal, WritableSignal } from '@angular/core';
-import { LngLat, YMap, YMapLocationRequest } from 'ymaps3';
+import { LngLat, YMap, YMapListener, YMapLocationRequest } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { debounceTime, Subject, switchMap, map } from 'rxjs';
@@ -19,6 +19,8 @@ export enum MapState {
   providedIn: 'root'
 })
 export class MapService {
+  static DEFAULT_ZOOM = 15;
+
   mapState = signal(MapState.INITIAL);
   editableMeeting: WritableSignal<Nullable<Meeting>> = signal(null);
   yandexPath = 'https://geocode-maps.yandex.ru/1.x/';
@@ -79,13 +81,22 @@ export class MapService {
     //   ymaps3.import.registerCdn('https://cdn.jsdelivr.net/npm/{package}', ['@yandex/ymaps3-default-ui-theme@latest']);
     // });
 
-    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer } = ymaps3;
+    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapListener } = ymaps3;
 
-    const defaultLocation: YMapLocationRequest = { center: [37.623082, 55.75254], zoom: 15 }
+    const defaultLocation: YMapLocationRequest = { center: [37.623082, 55.75254], zoom: MapService.DEFAULT_ZOOM }
 
     this.map = new YMap(this.document.getElementById('map') as HTMLElement, { location: defaultLocation, theme: 'dark' });
 
     this.map.addChild(new YMapDefaultSchemeLayer({})).addChild(new YMapDefaultFeaturesLayer({}));
+
+    // Создание объекта-слушателя.
+    const mapListener = new YMapListener({
+      layer: 'any',
+      onUpdate: this.updateHandler.bind(this),
+    });
+
+    // Добавление слушателя на карту.
+    this.map.addChild(mapListener);
 
     this.requestLocation();
   }
@@ -94,7 +105,7 @@ export class MapService {
     navigator.geolocation.getCurrentPosition((position) => {
       let location: YMapLocationRequest = {
         center: [position.coords.longitude, position.coords.latitude],
-        zoom: 15,
+        zoom: MapService.DEFAULT_ZOOM,
       };
 
       this.setLocation(location);
@@ -158,7 +169,7 @@ export class MapService {
   addPointFromInput(coordinates: LngLat) {
     let location: YMapLocationRequest = {
       center: coordinates,
-      zoom: 15,
+      zoom: MapService.DEFAULT_ZOOM,
     };
 
     this.map?.setLocation(location);
@@ -221,5 +232,9 @@ export class MapService {
       description: responseFeatureMember?.GeoObject.description,
       name: responseFeatureMember?.GeoObject.name,
     }));
+  }
+
+  private updateHandler(event: any) {
+    console.log(event);
   }
 }

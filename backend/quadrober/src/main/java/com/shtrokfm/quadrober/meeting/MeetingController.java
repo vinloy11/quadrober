@@ -107,6 +107,41 @@ public class MeetingController {
   }
 
   /**
+   * Получить список встреч по границам
+   * @param bounds Границы в формате "lat1,lon1;lat2,lon2"
+   * @return Список встреч
+   */
+  @GetMapping("/by-bounds")
+  public List<Meeting> getMeetingsByBounds(
+    @RequestParam(value = "bounds") Optional<String> bounds
+  ) {
+    if (bounds.isEmpty()) {
+      return new ArrayList<>(); // Возвращаем пустой список, если границы не указаны
+    }
+
+    double[][] preparedBounds;
+
+    try {
+      // Разбиваем строку на массивы координат
+      preparedBounds = Arrays.stream(bounds.get().split(";"))
+        .map(b -> Arrays.stream(b.split(","))
+          .mapToDouble(Double::parseDouble)
+          .toArray())
+        .toArray(double[][]::new);
+    } catch (RuntimeException e) {
+      return new ArrayList<>(); // Возвращаем пустой список в случае ошибки
+    }
+
+    // Проверяем, что границы корректны
+    if (preparedBounds.length != 2 || preparedBounds[0].length != 2 || preparedBounds[1].length != 2) {
+      return new ArrayList<>(); // Возвращаем пустой список, если границы некорректны
+    }
+
+    // Вызываем сервис для получения встреч по границам
+    return this.meetingService.findNearMeetings(preparedBounds);
+  }
+
+  /**
    * Удалить встречу
    * @param meetingId
    */

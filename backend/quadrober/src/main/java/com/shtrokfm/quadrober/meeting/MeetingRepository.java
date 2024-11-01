@@ -44,4 +44,20 @@ public interface MeetingRepository extends MongoRepository<Meeting, String> {
 
   @Query("{ '$or': [ { 'owner.id': ?0 }, { 'followers.id': ?0 } ] }")
   List<Meeting> findByUserId(String  id);
+
+
+  @Query(
+    "{ " +
+      "'address.point' : { '$geoWithin' : { '$box' : [ " +
+      " [ ?0, ?1 ], " + // Нижний левый угол (долгота, широта)
+      " [ ?2, ?3 ] " + // Верхний правый угол (долгота, широта)
+      " ] } } " +
+      "}"
+  )
+  List<Meeting> findByLocationWithinBounds(
+    double lowerLeftLongitude,
+    double lowerLeftLatitude,
+    double upperRightLongitude,
+    double upperRightLatitude
+  );
 }
