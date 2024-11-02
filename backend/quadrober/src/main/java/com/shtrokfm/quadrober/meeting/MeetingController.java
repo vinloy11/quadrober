@@ -160,8 +160,8 @@ public class MeetingController {
    * @param meetingId
    */
   @DeleteMapping
-  public void delete(@RequestBody String meetingId) {
-    this.meetingService.delete(meetingId);
+  public Boolean delete(@RequestBody String meetingId) {
+    return this.meetingService.delete(meetingId);
   }
 
   /**

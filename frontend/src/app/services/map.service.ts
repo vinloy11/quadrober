@@ -11,6 +11,8 @@ import { Nullable } from '../models/nullable';
 import { YMapUpdateResponse } from '../models/y-map-update-response-location';
 import { MeetingService } from './meeting.service';
 import { MeetingSearchCriteria } from '../models/meeting/meeting-search-criteria';
+import { Router } from '@angular/router';
+import { YMapDefaultMarker } from '@yandex/ymaps3-types/packages/markers';
 
 export enum MapState {
   INITIAL,
@@ -44,6 +46,7 @@ export class MapService {
   private yMapUpdateResponse$ = new Subject<YMapUpdateResponse>();
   private actualMeetingPoints$ = new BehaviorSubject<Map<string, Meeting>>(new Map() as any);
   actualMeetingPointsObservable$ = this.actualMeetingPoints$.asObservable();
+  private points: {[key: string]: YMapDefaultMarker} = {};
   private meetingPoints$ = this.yMapUpdateResponse$.asObservable()
     .pipe(
       debounceTime(250),
@@ -64,7 +67,8 @@ export class MapService {
                 coordinates: value.address.point as LngLat,
                 draggable: false,
                 hasTitle: false,
-                hasSubtitle: false
+                hasSubtitle: false,
+                pointId: value.id,
               });
             }
 
@@ -91,6 +95,7 @@ export class MapService {
     private readonly http: HttpClient,
     private readonly toastService: ToastService,
     private readonly meetingService: MeetingService,
+    private readonly router: Router,
     @Inject(DOCUMENT) private document: Document
   ) {
     this.initMap();
@@ -182,7 +187,7 @@ export class MapService {
   /**
    * Создать ползунок для выбора места встречи
    */
-  async addPoint({ coordinates, draggable, title, subtitle, isEditableMeetingPoint, hasTitle = true, hasSubtitle = true }: {
+  async addPoint({ coordinates, draggable, title, subtitle, isEditableMeetingPoint, hasTitle = true, hasSubtitle = true, pointId }: {
     coordinates?: LngLat,
     draggable?: boolean,
     title?: string,
@@ -190,6 +195,7 @@ export class MapService {
     isEditableMeetingPoint?: boolean,
     hasTitle?: boolean,
     hasSubtitle?: boolean,
+    pointId?: string,
   } = {}) {
 
     try {
@@ -207,15 +213,30 @@ export class MapService {
         subtitle: hasSubtitle ? subtitle || 'Передвигайте ползунок' : undefined,
         // onDragMove: this.onDragMovePointAHandler,
         onDragEnd: this.onDragEndHandler.bind(this),
+        properties: {pointId},
+        onClick: this.openMeetingInfo.bind(this, pointId),
       }) as any;
 
-      if (isEditableMeetingPoint) {
+      if (!pointId) {
         this.meetingPoint = newPoint;
+      } else {
+        if (this.points[pointId]) {
+          this.map?.removeChild(this.points[pointId]);
+        }
+
+        this.points[pointId] = newPoint;
       }
+
 
       this.map?.addChild(newPoint)
     } catch (e) {
 
+    }
+  }
+
+  openMeetingInfo(pointId?: string) {
+    if (pointId) {
+      this.router.navigate(['/meetings', pointId]);
     }
   }
 
@@ -291,5 +312,12 @@ export class MapService {
     this.yMapUpdateResponse$.next(event);
 
     return event;
+  }
+
+  removeMeetingPointById(meetingId: string | undefined) {
+    if (!meetingId) return;
+
+    this.map?.removeChild(this.points[meetingId]);
+    delete this.points[meetingId];
   }
 }

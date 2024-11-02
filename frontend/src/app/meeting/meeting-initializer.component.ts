@@ -6,6 +6,7 @@ import { filter, merge, Subject, takeUntil } from 'rxjs';
 import { NgbOffcanvas, NgbOffcanvasRef } from '@ng-bootstrap/ng-bootstrap';
 import { Nullable } from '../models/nullable';
 import { NavigationService } from '../services/navigation.service';
+import { MapService } from '../services/map.service';
 
 @Component({
   selector: 'app-meeting-initializer',
@@ -24,6 +25,7 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly navigationService: NavigationService,
     private readonly router: Router,
+    private readonly mapService: MapService,
   ) {
   }
 
@@ -45,6 +47,11 @@ export class MeetingInitializerComponent implements OnInit, OnDestroy {
 
       if (!meeting) return;
 
+      this.mapService.setLocation({
+        duration: 250,
+        center: [meeting.address.point[0], meeting.address.point[1]],
+        zoom: MapService.DEFAULT_ZOOM,
+      })
       this.meetingComponentCanvasRef = this.ngbOffCanvas.open(MeetingComponent);
       const meetingComponent = this.meetingComponentCanvasRef.componentInstance as MeetingComponent;
       meetingComponent.meeting = meeting;

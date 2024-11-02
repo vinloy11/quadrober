@@ -65,4 +65,15 @@ export class MeetingService {
       }
     });
   }
+
+  /**
+   * Создание встречи
+   * @param meetingId
+   * @return boolean
+   */
+  delete(meetingId: string) {
+    return this.http.delete<boolean>(this.apiPath, {
+      body: meetingId
+    });
+  }
 }

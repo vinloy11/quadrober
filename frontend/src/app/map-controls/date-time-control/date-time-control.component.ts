@@ -124,6 +124,7 @@ export class DateTimeControlComponent implements OnInit {
 
         if (response.id) {
           this.router.navigate(['/meetings/', response.id]);
+          this.addPoint(meeting);
 
           this.toastService.show({
             text: 'Ваша встреча успешно обновлена',
@@ -153,6 +154,7 @@ export class DateTimeControlComponent implements OnInit {
 
       if (response.meetingId) {
         this.router.navigate(['/meetings/', response.meetingId]);
+        this.addPoint(meeting);
 
         this.toastService.show({
           text: 'Ваша встреча успешно создана',
@@ -168,5 +170,16 @@ export class DateTimeControlComponent implements OnInit {
         });
       }
     },);
+  }
+
+  private addPoint(meeting: Meeting) {
+    this.mapService.addPoint({
+      isEditableMeetingPoint: true,
+      pointId: meeting.id,
+      coordinates: [meeting.address.point[0], meeting.address.point[1]],
+      draggable: false,
+      hasTitle: false,
+      hasSubtitle: false,
+    })
   }
 }

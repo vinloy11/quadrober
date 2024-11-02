@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -71,12 +72,43 @@ public class MeetingService {
     );
   }
 
-  public Meeting delete(String meetingId) {
-    return null;
+  public Boolean delete(String meetingId) {
+    this.meetingRepository.deleteById(meetingId);
+
+    return true;
   }
 
   public Meeting update(Meeting meeting) {
-    return null;
+    // достаем нашу встречу
+    Meeting matchMeeting = this.meetingRepository.findById(meeting.getId()).orElse(null);
+
+    // Если встречи не нашлось, кидаем 404
+    if (matchMeeting == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Не найдена встреча по данному идентификатору");
+    }
+
+    // Проверяем нет ли встреч в этом месте в это время
+    List<Meeting> nearMeetings = this.findNearMeetings(
+      meeting.getAddress().getPoint(),
+      meeting.getMeetingDateTime(),
+      1000
+    ).stream().filter(nearMeeting ->
+      !Objects.equals(meeting.getId(), nearMeeting.getId())).toList();
+
+    if (!nearMeetings.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "В это время в этом месте уже запланирована другая встреча");
+    }
+
+    Meeting updatedMeeting = new Meeting(
+      meeting.getId(),
+      matchMeeting.getOwner(),
+      matchMeeting.getFollowers(),
+      meeting.getAddress(),
+      meeting.getMeetingDateTime()
+    );
+
+    // Обновляем встречу
+    return this.meetingRepository.save(updatedMeeting);
   }
 
   public void addFollower(String meetingId, String followerId) {

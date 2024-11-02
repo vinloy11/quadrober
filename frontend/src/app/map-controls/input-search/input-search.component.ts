@@ -9,6 +9,8 @@ import { DatePipe, JsonPipe, NgIf } from '@angular/common';
 import { Nullable } from '../../models/nullable';
 import { Address } from '../../models/meeting/address';
 import { DATE_TIME_LOCAL } from '../../shared/date-format';
+import { NavigationService } from '../../services/navigation.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-input-search',
@@ -53,6 +55,7 @@ export class InputSearchComponent implements OnDestroy, OnInit {
   constructor(
     private readonly mapService: MapService,
     private readonly datePipe: DatePipe,
+    private readonly router: Router,
     @Optional() private readonly formGroupDirective: FormGroupDirective,
   ) {
   }
@@ -100,7 +103,15 @@ export class InputSearchComponent implements OnDestroy, OnInit {
 
   cancelForm() {
     this.form?.reset();
-    this.mapService.removeMeetingPoint();
+
+    if (this.mapService.editableMeeting()) {
+      this.router.navigate(['/meetings', this.mapService.editableMeeting()?.id]);
+      this.mapService.removeMeetingPoint();
+      this.mapService.editableMeeting.set(null);
+    } else {
+      this.mapService.removeMeetingPoint();
+    }
+
     this.mapService.setMapState(MapState.INITIAL);
   }
 
