@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 @Component
 public class SignatureFilter implements Filter {
@@ -40,10 +43,6 @@ public class SignatureFilter implements Filter {
 
     // Извлекаем данные
     String data = authorizationHeader.replace("twa-init-data ", "");
-    String botToken = this.botToken;
-
-    System.out.println(data);
-
 
     if (!checkSignature(data, botToken)) {
       httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid signature");
@@ -60,7 +59,8 @@ public class SignatureFilter implements Filter {
     }
 
     try {
-      String encoded = java.net.URLDecoder.decode(data, "UTF-8");
+      // Декодируем данные
+      String encoded = URLDecoder.decode(data, StandardCharsets.UTF_8.name());
       String[] arr = encoded.split("&");
       String hash = null;
 
@@ -77,31 +77,40 @@ public class SignatureFilter implements Filter {
       }
 
       // Удаляем хэш из массива
-      arr = java.util.Arrays.stream(arr).filter(str -> !str.startsWith("hash=")).toArray(String[]::new);
-      java.util.Arrays.sort(arr); // Сортируем массив
+      arr = Arrays.stream(arr).filter(str -> !str.startsWith("hash=")).toArray(String[]::new);
+      Arrays.sort(arr); // Сортируем массив
 
       // Формируем строку проверки данных
       String dataCheckString = String.join("\n", arr);
 
-      // Создаем HMAC-SHA-256 подпись
-      javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-      javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(botToken.getBytes("UTF-8"), "HmacSHA256");
-      mac.init(secretKeySpec);
-      byte[] hmac = mac.doFinal(dataCheckString.getBytes("UTF-8"));
+      // Создаем секретный ключ
+      String secretKey = createHmacSha256(botToken, "WebAppData");
 
-      // Преобразуем в шестнадцатеричное представление
-      StringBuilder hexString = new StringBuilder();
-      for (byte b : hmac) {
-        String hex = Integer.toHexString(0xff & b);
-        if (hex.length() == 1) hexString.append('0');
-        hexString.append(hex);
-      }
+      // Создаем HMAC-SHA-256 подпись для строки проверки данных
+      String computedHash = createHmacSha256(dataCheckString, secretKey);
 
       // Сравниваем хэши
-      return hexString.toString().equals(hash);
+      return computedHash.equals(hash);
     } catch (Exception e) {
       e.printStackTrace();
       return false;
     }
+  }
+
+  private String createHmacSha256(String data, String key) throws Exception {
+    javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+    javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+    mac.init(secretKeySpec);
+    byte[] hmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+
+    // Преобразуем в шестнадцатеричное представление
+    StringBuilder hexString = new StringBuilder();
+    for (byte b : hmac) {
+      String hex = Integer.toHexString(0xff & b);
+      if (hex.length() == 1) hexString.append('0');
+      hexString.append(hex);
+    }
+
+    return hexString.toString();
   }
 }
