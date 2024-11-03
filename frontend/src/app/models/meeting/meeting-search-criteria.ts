@@ -6,7 +6,7 @@ export interface MeetingSearchCriteria {
    * [39.772336492126485, 43.56499563627893]
    * ]
    */
-  bounds: string;
+  bounds?: string;
   /**
    * Фильтр по дате (необязательный)
    */

@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.Period;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
@@ -60,8 +62,8 @@ public class MeetingService {
 
 
     // Устанавливаем начало и конец встречи;
-    Instant startOfDay = meetingDateTime.atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay(ZoneId.of("UTC")).toInstant(); // Начало дня в UTC
-    Instant endOfDay = startOfDay.plusSeconds(86400); // Конец дня (86400 секунд = 1 день)
+    Instant startOfDay = meetingDateTime.atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay(ZoneId.of("UTC")).toInstant().plus(Duration.ofMinutes(180)); // Начало дня в UTC
+    Instant endOfDay = startOfDay.plusSeconds(86400).plus(Duration.ofMinutes(180)); // Конец дня (86400 секунд = 1 день)
 
     return this.meetingRepository.findByLocationNearInCurrentDay(
       pointCoordinates[0],
@@ -163,7 +165,8 @@ public class MeetingService {
 
   public List<Meeting> findNearMeetings(
     double[][] bounds,
-    Instant meetingDateTime
+    Instant meetingDateTime,
+    Integer timezoneOffset
   ) {
     // Верхний левый угол
     double upperLeftLongitude = bounds[0][0]; // Долгота
@@ -184,7 +187,13 @@ public class MeetingService {
 
     // Устанавливаем начало и конец встречи;
     Instant startOfDay = meetingDateTime.atZone(ZoneId.of("UTC")).toLocalDate().atStartOfDay(ZoneId.of("UTC")).toInstant(); // Начало дня в UTC
+    if (timezoneOffset != null) {
+      startOfDay = startOfDay.plusSeconds(timezoneOffset * 60);
+    }
     Instant endOfDay = startOfDay.plusSeconds(86400); // Конец дня (86400 секунд = 1 день)
+    if (timezoneOffset != null) {
+      endOfDay = endOfDay.plusSeconds(timezoneOffset * 60);
+    }
 
     return this.meetingRepository.findByLocationWithinBoundsAndDateTime(
       upperLeftLongitude,

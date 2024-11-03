@@ -2,7 +2,7 @@ import { Inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { LngLat, YMap, YMapListener, YMapLocationRequest } from 'ymaps3';
 import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { debounceTime, Subject, switchMap, map, filter, withLatestFrom, BehaviorSubject } from 'rxjs';
+import { debounceTime, Subject, switchMap, map, filter, withLatestFrom, BehaviorSubject, take } from 'rxjs';
 import { GeocoderResponse, Point } from '../models/geocoder-response';
 import { ToastService } from './toast.service';
 import { Address } from '../models/meeting/address';
@@ -40,11 +40,13 @@ export class MapService {
       return this.geocoderResponseToAddress(response, true);
     })
   );
+  meetingCriteria: WritableSignal<Nullable<MeetingSearchCriteria>> = signal(null);
 
   // Следим за состоянием обновления карты
   // В случае, если карта обновляется, подтягиваем список встреч
   private yMapUpdateResponse$ = new Subject<YMapUpdateResponse>();
-  private actualMeetingPoints$ = new BehaviorSubject<Map<string, Meeting>>(new Map() as any);
+  private lastYMapUpdateResponse: Nullable<YMapUpdateResponse> = null;
+  private actualMeetingPoints$ = new BehaviorSubject<Map<string, Meeting>>(new Map());
   actualMeetingPointsObservable$ = this.actualMeetingPoints$.asObservable();
   private points: {[key: string]: YMapDefaultMarker} = {};
   private meetingPoints$ = this.yMapUpdateResponse$.asObservable()
@@ -52,8 +54,14 @@ export class MapService {
       debounceTime(250),
       filter(yMapUpdateResponse => !!yMapUpdateResponse),
       switchMap((response) => {
+        this.lastYMapUpdateResponse = response;
         const bounds = response.location.bounds.map(bound => bound.join(',')).join(';');
         const criteria: MeetingSearchCriteria = { bounds };
+        const meetingCriteria = this.meetingCriteria();
+        if (meetingCriteria?.date) {
+          criteria.date = meetingCriteria.date;
+        }
+
         return this.meetingService.getMeetings(criteria);
       }),
       withLatestFrom(this.actualMeetingPointsObservable$),
@@ -319,5 +327,23 @@ export class MapService {
 
     this.map?.removeChild(this.points[meetingId]);
     delete this.points[meetingId];
+  }
+
+  searchWithCriteria(meetingSearchCriteria: MeetingSearchCriteria) {
+    this.meetingCriteria.set(meetingSearchCriteria);
+
+    if (this.lastYMapUpdateResponse) {
+      this.removeAllPoints();
+      this.actualMeetingPoints$.next(new Map());
+      this.yMapUpdateResponse$.next(this.lastYMapUpdateResponse);
+    }
+  }
+
+  private removeAllPoints() {
+    Object.values(this.points).forEach(point => {
+      if (point) {
+        this.map?.removeChild(point);
+      }
+    })
   }
 }

@@ -62,6 +62,7 @@ export class MeetingService {
       params: {
         bounds: criteria.bounds || [],
         date: criteria.date || [],
+        offset: new Date().getTimezoneOffset(),
       }
     });
   }

@@ -114,7 +114,8 @@ public class MeetingController {
   @GetMapping("/by-bounds")
   public List<Meeting> getMeetingsByBounds(
     @RequestParam(value = "bounds") Optional<String> bounds,
-    @RequestParam(value = "date", required = false) Optional<String> date
+    @RequestParam(value = "date", required = false) Optional<String> date,
+    @RequestParam(value = "offset", required = false) Integer timezoneOffset
   ) {
     if (bounds.isEmpty()) {
       return new ArrayList<>(); // Возвращаем пустой список, если границы не указаны
@@ -152,7 +153,7 @@ public class MeetingController {
     }
 
     // Вызываем сервис для получения встреч по границам
-    return this.meetingService.findNearMeetings(preparedBounds, meetingDateTime);
+    return this.meetingService.findNearMeetings(preparedBounds, meetingDateTime, timezoneOffset);
   }
 
   /**

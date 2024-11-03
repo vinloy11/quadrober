@@ -9,6 +9,7 @@ import { MapState, MapService } from '../../services/map.service';
 import { DateTimeControlComponent } from '../date-time-control/date-time-control.component';
 import { ToastsContainer } from '../../shared/toasts-container';
 import { Address } from '../../models/meeting/address';
+import { MeetingFilterComponent } from '../meeting-filter/meeting-filter.component';
 
 export type PointForm = FormGroup<PointFormGroup>;
 
@@ -27,7 +28,8 @@ export interface PointFormGroup {
     ReactiveFormsModule,
     NgIf,
     DateTimeControlComponent,
-    ToastsContainer
+    ToastsContainer,
+    MeetingFilterComponent
   ],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss'
