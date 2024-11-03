@@ -6,10 +6,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class SignatureFilter implements Filter {
@@ -54,63 +58,54 @@ public class SignatureFilter implements Filter {
   }
 
   private boolean checkSignature(String data, String botToken) {
-    if (data == null || data.isEmpty()) {
-      return false;
+    Map<String, String> vals = new HashMap<>();
+    for (String pair : data.split("&")) {
+      String[] keyValue = pair.split("=", 2);
+      String key = keyValue[0];
+      String value = URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8);
+      vals.put(key, value);
     }
 
+    // Формируем строку для проверки
+    String dataCheckString = vals.entrySet().stream()
+      .filter(entry -> !entry.getKey().equals("hash"))
+      .sorted(Map.Entry.comparingByKey())
+      .map(entry -> entry.getKey() + "=" + entry.getValue())
+      .collect(Collectors.joining("\n"));
+
+    // Вычисляем секретный ключ
+    byte[] secretKey = hmacSha256("WebAppData", botToken);
+    // Вычисляем хэш
+    String computedHash = hmacSha256Hex(secretKey, dataCheckString);
+
+    // Сравнение хэшей
+    return computedHash.equals(vals.get("hash"));
+  }
+
+  private static byte[] hmacSha256(String key, String data) {
     try {
-      // Декодируем данные
-      String encoded = URLDecoder.decode(data, StandardCharsets.UTF_8.name());
-      String[] arr = encoded.split("&");
-      String hash = null;
-
-      // Находим хэш
-      for (String str : arr) {
-        if (str.startsWith("hash=")) {
-          hash = str.split("=")[1];
-          break;
-        }
-      }
-
-      if (hash == null) {
-        return false;
-      }
-
-      // Удаляем хэш из массива
-      arr = Arrays.stream(arr).filter(str -> !str.startsWith("hash=")).toArray(String[]::new);
-      Arrays.sort(arr); // Сортируем массив
-
-      // Формируем строку проверки данных
-      String dataCheckString = String.join("\n", arr);
-
-      // Создаем секретный ключ
-      String secretKey = createHmacSha256(botToken, "WebAppData");
-
-      // Создаем HMAC-SHA-256 подпись для строки проверки данных
-      String computedHash = createHmacSha256(dataCheckString, secretKey);
-
-      // Сравниваем хэши
-      return computedHash.equals(hash);
+      Mac mac = Mac.getInstance("HmacSHA256");
+      SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+      mac.init(secretKeySpec);
+      return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
     } catch (Exception e) {
-      e.printStackTrace();
-      return false;
+      throw new RuntimeException("Failed to calculate HMAC SHA-256", e);
     }
   }
 
-  private String createHmacSha256(String data, String key) throws Exception {
-    javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-    javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-    mac.init(secretKeySpec);
-    byte[] hmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-
-    // Преобразуем в шестнадцатеричное представление
-    StringBuilder hexString = new StringBuilder();
-    for (byte b : hmac) {
-      String hex = Integer.toHexString(0xff & b);
-      if (hex.length() == 1) hexString.append('0');
-      hexString.append(hex);
+  private static String hmacSha256Hex(byte[] key, String data) {
+    try {
+      Mac mac = Mac.getInstance("HmacSHA256");
+      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "HmacSHA256");
+      mac.init(secretKeySpec);
+      byte[] hashBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+      StringBuilder hash = new StringBuilder();
+      for (byte b : hashBytes) {
+        hash.append(String.format("%02x", b));
+      }
+      return hash.toString();
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to calculate HMAC SHA-256", e);
     }
-
-    return hexString.toString();
   }
 }
