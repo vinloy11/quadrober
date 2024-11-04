@@ -3,7 +3,6 @@ import { RouterOutlet } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AddPointButtonComponent } from './map-controls/add-point-button/add-point-button.component';
 import { MapComponent } from './map-controls/map/map.component';
-import { AuthService } from './services/auth.service';
 import { CookieService } from 'ngx-cookie-service';
 import { take } from 'rxjs';
 
@@ -20,7 +19,6 @@ export class AppComponent implements OnInit {
   error = '';
 
   constructor(
-    private readonly authService: AuthService,
     // private readonly router: Router,
     private readonly cookieService: CookieService,
   ) {
@@ -42,7 +40,7 @@ export class AppComponent implements OnInit {
       this.user = JSON.parse(user);
     }
 
-    // this.authService.authorize()
+    // this.userService.authorize()
     //   .pipe(take(1))
     //   .subscribe(
     //     response => {

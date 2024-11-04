@@ -12,6 +12,7 @@ import { Meeting } from '../../models/meeting/meeting';
 import { MeetingService } from '../../services/meeting.service';
 import { ToastService } from '../../services/toast.service';
 import { Router, RouterLink } from '@angular/router';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-date-time-control',
@@ -39,6 +40,7 @@ export class DateTimeControlComponent implements OnInit {
     private readonly meetingService: MeetingService,
     private readonly toastService: ToastService,
     private readonly router: Router,
+    private readonly userService: UserService,
     @Optional() private readonly formGroupDirective: FormGroupDirective,
   ) {
   }
@@ -78,16 +80,6 @@ export class DateTimeControlComponent implements OnInit {
           const formValue = this.form?.value;
           if (!formValue || !formValue?.pointDateTime || !formValue?.address) return;
 
-          const meeting: Meeting = {
-            owner: {
-              id: '671cc5a63774c6062f9cb8e6',
-              name: 'Andrew1',
-            },
-            followers: [],
-            meetingDateTime: new Date(formValue?.pointDateTime).toJSON(),
-            address: formValue.address
-          }
-
           if (isEditable) {
             const editableMeeting = this.mapService.editableMeeting();
             if (editableMeeting) {
@@ -98,6 +90,16 @@ export class DateTimeControlComponent implements OnInit {
               });
             }
           } else {
+            const currentUser = this.userService.currentUser();
+            if (!currentUser) return;
+
+            const meeting: Meeting = {
+              owner: currentUser,
+              followers: [],
+              meetingDateTime: new Date(formValue?.pointDateTime).toJSON(),
+              address: formValue.address
+            }
+
             this.createMeeting(meeting);
           }
         } else {

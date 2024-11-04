@@ -24,6 +24,8 @@ public class UserService {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
 
+    user.setTelegramId(telegramId);
+
     return this.userRepository.save(user);
   }
 
