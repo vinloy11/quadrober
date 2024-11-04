@@ -1,20 +1,32 @@
 package com.shtrokfm.quadrober.user;
 
+import com.shtrokfm.quadrober.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-  private final UserRepository userRepository;
+  private final UserService userService;
+
+  @PostMapping
+  public User createUser(@RequestBody User user, @RequestAttribute("telegramId") String telegramId) {
+    return this.userService.save(user, telegramId);
+  }
 
   @GetMapping
-  public Boolean users() {
-//    this.userRepository.deleteAll();
-//    this.userRepository.save(new User("Andrew1"));
-    return true;
+  public User getUser(@RequestAttribute("telegramId") String telegramId) {
+    return this.userService.findByTelegramId(telegramId);
+  }
+
+  @DeleteMapping
+  public boolean deleteUser(@RequestAttribute("telegramId") String telegramId) {
+    return this.userService.delete(telegramId);
+  }
+
+  @PutMapping
+  public User updateUser(@RequestBody User user, @RequestAttribute("telegramId") String telegramId) {
+    return this.userService.update(user, telegramId);
   }
 }

@@ -4,6 +4,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class SignatureFilter implements Filter {
+public class SignatureFilter implements Filter, Ordered {
   @Value("${bot.auth.disabled}")
   private String botAuthDisabled;
 
@@ -107,5 +108,10 @@ public class SignatureFilter implements Filter {
     } catch (Exception e) {
       throw new RuntimeException("Failed to calculate HMAC SHA-256", e);
     }
+  }
+
+  @Override
+  public int getOrder() {
+    return 0; // Установите порядок выполнения (меньше - раньше)
   }
 }

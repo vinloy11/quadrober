@@ -1,3 +1,9 @@
+# Запустить через ssl чтобы тестить приложение в телеграме 
+
+Run `ng serve --ssl true --ssl-key "C:\path\to\key.pem" --ssl-cert "C:\path\to\cert.pem" --host 0.0.0.0 --port 4200 --disable-host-check`
+
+И добавить урл в папе ботов в settings button
+
 # Frontend
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.9.

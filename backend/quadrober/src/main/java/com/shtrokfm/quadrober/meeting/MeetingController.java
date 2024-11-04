@@ -115,8 +115,10 @@ public class MeetingController {
   public List<Meeting> getMeetingsByBounds(
     @RequestParam(value = "bounds") Optional<String> bounds,
     @RequestParam(value = "date", required = false) Optional<String> date,
-    @RequestParam(value = "offset", required = false) Integer timezoneOffset
+    @RequestParam(value = "offset", required = false) Integer timezoneOffset,
+    @RequestAttribute("telegramId") String telegramId
   ) {
+
     if (bounds.isEmpty()) {
       return new ArrayList<>(); // Возвращаем пустой список, если границы не указаны
     }
