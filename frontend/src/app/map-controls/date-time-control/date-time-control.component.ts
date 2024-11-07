@@ -13,6 +13,7 @@ import { MeetingService } from '../../services/meeting.service';
 import { ToastService } from '../../services/toast.service';
 import { Router, RouterLink } from '@angular/router';
 import { UserService } from '../../services/user.service';
+import { httpErrorHandler } from '../../shared/utils/http-error-handler';
 
 @Component({
   selector: 'app-date-time-control',
@@ -117,7 +118,7 @@ export class DateTimeControlComponent implements OnInit {
           classname: 'bg-danger text-light',
           delay: 5000,
         });
-        return EMPTY;
+        return httpErrorHandler(err);
       }),
     ).subscribe(
       (response) => {
@@ -148,7 +149,7 @@ export class DateTimeControlComponent implements OnInit {
           delay: 5000,
         });
 
-        return EMPTY;
+        return httpErrorHandler(err);
       }),
     ).subscribe((response) => {
       this.form?.reset();

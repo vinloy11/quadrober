@@ -8,7 +8,7 @@ import { map } from 'rxjs';
   providedIn: 'root'
 })
 export class UserService {
-  private readonly apiPath = '/api/meetings';
+  private readonly apiPath = '/api/users';
   currentUser: WritableSignal<Nullable<User>> = signal(null);
 
   constructor(

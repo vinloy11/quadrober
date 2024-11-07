@@ -19,10 +19,10 @@ export interface User {
    * Рассказ о себе
    * max = 550
    */
-  bio: string;
+  bio?: string;
 
   /**
    * Ссылки на социальные сети
    */
-  socialMediaLinks: SocialMediaLink[] ;
+  socialMediaLinks?: SocialMediaLink[] ;
 }

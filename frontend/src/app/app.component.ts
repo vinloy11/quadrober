@@ -1,10 +1,14 @@
 import { Component, OnInit} from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { AddPointButtonComponent } from './map-controls/add-point-button/add-point-button.component';
 import { MapComponent } from './map-controls/map/map.component';
 import { CookieService } from 'ngx-cookie-service';
-import { take } from 'rxjs';
+import { catchError, take } from 'rxjs';
+import { UserService } from './services/user.service';
+import { httpErrorHandler } from './shared/utils/http-error-handler';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import { ToastService } from './services/toast.service';
 
 @Component({
   selector: 'app-root',
@@ -19,8 +23,10 @@ export class AppComponent implements OnInit {
   error = '';
 
   constructor(
-    // private readonly router: Router,
+    private readonly router: Router,
+    private readonly userService: UserService,
     private readonly cookieService: CookieService,
+    private readonly toastService: ToastService,
   ) {
     const params = new URLSearchParams(window.location.hash.slice(1));
     const initDataString = params.get('tgWebAppData');
@@ -40,16 +46,34 @@ export class AppComponent implements OnInit {
       this.user = JSON.parse(user);
     }
 
-    // this.userService.authorize()
-    //   .pipe(take(1))
-    //   .subscribe(
-    //     response => {
-    //       // this.store.dispatch(setUserInfo({ user: response }));
-    //     },
-    //     error => {
-    //       this.error = error.error.reason
-    //     },
-    //   );
+    this.userService.getUser()
+      .pipe(
+        take(1),
+        catchError((error: HttpErrorResponse) => {
+          switch (error.status) {
+            case HttpStatusCode.NotFound:
+              this.router.navigate(['/registration']);
+              break;
+            case HttpStatusCode.Unauthorized:
+              this.router.navigate(['/public']);
+              break;
+            default:
+              this.toastService.show({
+                text: 'Что-то пошло не так, попробуйте перезайти в приложение',
+                classname: 'bg-danger text-light',
+                delay: 5000,
+              });
+          }
+
+          return httpErrorHandler(error);
+        }),
+      )
+      .subscribe(
+        response => {
+          console.log('Пользователь авторизован и зарегистрирован', response)
+          // this.store.dispatch(setUserInfo({ user: response }));
+        },
+      );
 
     this.webApp.expand();
   }

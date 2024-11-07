@@ -1,0 +1,40 @@
+<div class="offcanvas-header">
+  <h4 class="offcanvas-title" id="offcanvas-basic-title">Регистрация</h4>
+</div>
+<div class="offcanvas-body">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="mb-3">
+      <label for="user-name">Имя</label>
+      <div class="input-group">
+        <app-form-control appFormControlName="name">
+          <input
+            formControlName="name"
+            id="user-name"
+            class="form-control"
+            placeholder="Введите ваше имя"
+          />
+        </app-form-control>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="user-date-birthday">Дата рождения</label>
+      <div class="input-group">
+        <app-form-control appFormControlName="dateBirthday">
+          <input
+            formControlName="dateBirthday"
+            id="user-date-birthday"
+            class="form-control"
+            placeholder="Выберите вашу дату рождения"
+            type="date"
+          />
+        </app-form-control>
+      </div>
+    </div>
+    <div class="text-end">
+      <button type="submit" class="btn btn-outline-secondary">Зарегистрироваться</button>
+    </div>
+  </form>
+</div>
+
+
