@@ -1,0 +1,12 @@
+@if (!readonly && appFormControl) {
+  <input
+    [class]="'form-control ' + className"
+    [placeholder]="placeholder || 'Заполните поле'"
+    type="text"
+    [formControl]="appFormControl"
+  />
+} @else {
+  @if (appFormControl?.value) {
+    {{ appFormControl?.value }}
+  }
+}

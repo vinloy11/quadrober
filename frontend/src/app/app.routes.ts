@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: 'meetings/:meetingId', component: MeetingInitializerComponent },
   { path: 'registration', component: RegistrationInitializerComponent },
   { path: 'public', loadComponent: () => import('./public/public/public.component').then(m => m.PublicComponent) },
+  { path: 'user/:userId', loadComponent: () => import('./user/user-initializer.component').then(m => m.UserInitializerComponent) },
   { path: '**', redirectTo: '' }
 ];

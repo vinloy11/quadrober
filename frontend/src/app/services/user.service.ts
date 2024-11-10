@@ -2,7 +2,7 @@ import { Injectable, signal, WritableSignal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { User } from '../models/user/user';
 import { Nullable } from '../models/nullable';
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -24,8 +24,14 @@ export class UserService {
     ));
   }
 
+  getUserById({ userId }: { userId: string }) {
+    return this.http.get<User>(`${this.apiPath}/${userId}`);
+  }
+
   createUser(user: User) {
-    return this.http.post<User>(this.apiPath, user);
+    return this.http.post<User>(this.apiPath, user).pipe(
+      tap(user => this.currentUser.set(user)),
+    );
   }
 
   deleteUser() {

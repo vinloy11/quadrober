@@ -10,6 +10,8 @@ import { DateTimeControlComponent } from '../date-time-control/date-time-control
 import { ToastsContainer } from '../../shared/toasts-container';
 import { Address } from '../../models/meeting/address';
 import { MeetingFilterComponent } from '../meeting-filter/meeting-filter.component';
+import { UserComponent } from '../../user/user.component';
+import { ProfileButtonComponent } from '../profile-button/profile-button.component';
 
 export type PointForm = FormGroup<PointFormGroup>;
 
@@ -29,7 +31,9 @@ export interface PointFormGroup {
     NgIf,
     DateTimeControlComponent,
     ToastsContainer,
-    MeetingFilterComponent
+    MeetingFilterComponent,
+    UserComponent,
+    ProfileButtonComponent
   ],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss'

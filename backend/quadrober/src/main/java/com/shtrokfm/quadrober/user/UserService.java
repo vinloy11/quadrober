@@ -64,4 +64,16 @@ public class UserService {
 
     return matchedUser;
   }
+
+  public User findByUserId(String userId) {
+    User user = this.userRepository.findById(userId).orElse(null);
+
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    user.setTelegramId(null);
+
+    return user;
+  }
 }

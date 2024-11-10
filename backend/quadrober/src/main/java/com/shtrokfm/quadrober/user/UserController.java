@@ -20,6 +20,11 @@ public class UserController {
     return this.userService.findByTelegramId(telegramId);
   }
 
+  @GetMapping("/{userId}")
+  public User getUserById(@PathVariable String userId) {
+    return this.userService.findByUserId(userId);
+  }
+
   @DeleteMapping
   public boolean deleteUser(@RequestAttribute("telegramId") String telegramId) {
     return this.userService.delete(telegramId);
